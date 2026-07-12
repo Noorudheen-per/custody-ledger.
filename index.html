@@ -2,9 +2,20 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#14161c">
+<meta name="description" content="Custody Ledger — a petty-cash and personal-loan tracker in Qatari Riyal. Works beautifully on iPhone and desktop, and installs to your home screen.">
 <title>Custody Ledger · Petty Cash</title>
+
+<!-- Home-screen / PWA (iPhone + Android + desktop) -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Custody Ledger">
+<meta name="application-name" content="Custody Ledger">
+<meta name="format-detection" content="telephone=no">
+<!-- Favicon, Apple touch icon and web-app manifest are generated at runtime from the brand seal -->
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500;1,9..144,600&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -20,9 +31,9 @@
   --shadow-sm:0 1px 2px rgba(20,24,33,.06);
   --r:15px;
 }
-*{box-sizing:border-box;margin:0;padding:0}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html{-webkit-text-size-adjust:100%}
-body{font-family:'Inter',system-ui,sans-serif;background:linear-gradient(178deg,#f2f4f0 0%,#e7ebe5 46%,#e2e7df 100%);background-attachment:fixed;color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased;padding-bottom:104px}
+body{font-family:'Inter',system-ui,sans-serif;background:linear-gradient(178deg,#f2f4f0 0%,#e7ebe5 46%,#e2e7df 100%);background-attachment:fixed;color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased;padding-bottom:calc(104px + env(safe-area-inset-bottom))}
 .num{font-family:'IBM Plex Mono',ui-monospace,monospace;font-feature-settings:"tnum" 1;letter-spacing:-.02em}
 h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;letter-spacing:-.01em;line-height:1.08}
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
@@ -31,13 +42,15 @@ svg{display:block}
 .ico{width:1em;height:1em;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 
 /* ---------- Masthead ---------- */
-.top{background:var(--ink);color:#fff;padding:20px 20px 30px;position:relative;overflow:hidden}
+.top{background:var(--ink);color:#fff;padding:calc(20px + env(safe-area-inset-top)) max(20px,env(safe-area-inset-right)) 30px max(20px,env(safe-area-inset-left));position:relative;overflow:hidden}
 .top::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 47px,rgba(255,255,255,.028) 47px 48px);pointer-events:none}
 .top::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,transparent,var(--brass),transparent);opacity:.7}
 .top-inner{max-width:1080px;margin:0 auto;position:relative;z-index:1;display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
 .brand-block{display:flex;align-items:center;gap:14px}
 .seal{width:44px;height:44px;border-radius:50%;border:1.5px solid var(--brass);display:grid;place-items:center;flex-shrink:0;background:radial-gradient(circle at 30% 30%,rgba(201,162,74,.18),transparent)}
 .seal span{font-family:'Fraunces',serif;font-weight:600;font-style:italic;color:var(--brass-2);font-size:22px}
+.seal-mark{width:23px;height:23px;fill:none;stroke:var(--brass-2);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.login-card .seal-mark{width:27px;height:27px}
 .mark{font-family:'Fraunces',serif;font-weight:600;font-size:25px;color:#fff;line-height:1}
 .mark em{font-style:italic;color:var(--brass-2)}
 .brand-sub{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#8e95a2;margin-top:5px}
@@ -169,7 +182,7 @@ svg{display:block}
 .foot{max-width:1080px;margin:28px auto 0;padding:16px 20px 0;font-size:11.5px;color:var(--ink-faint);border-top:1px solid var(--line);text-align:center}
 
 /* ---------- FAB ---------- */
-.fab{position:fixed;right:20px;bottom:20px;z-index:40;background:var(--ink);color:#fff;border-radius:16px;padding:15px 22px;font-weight:600;font-size:15px;box-shadow:0 12px 30px rgba(20,24,33,.32);display:flex;align-items:center;gap:9px;transition:.15s}
+.fab{position:fixed;right:calc(20px + env(safe-area-inset-right));bottom:calc(20px + env(safe-area-inset-bottom));z-index:40;background:var(--ink);color:#fff;border-radius:16px;padding:15px 22px;font-weight:600;font-size:15px;box-shadow:0 12px 30px rgba(20,24,33,.32);display:flex;align-items:center;gap:9px;transition:.15s}
 .fab:hover{background:#000;transform:translateY(-2px)}
 .fab .ico{width:18px;height:18px;stroke-width:2}
 
@@ -192,7 +205,7 @@ svg{display:block}
 .tbtn.sel{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
 .tbtn.sel .tic{background:var(--ink);color:#fff}
 label.fl{display:block;font-size:12px;font-weight:600;color:var(--ink-soft);margin:15px 0 6px;letter-spacing:.02em}
-input,select,textarea{width:100%;font-family:inherit;font-size:15px;padding:12px 13px;border:1.5px solid var(--line-strong);border-radius:11px;background:var(--card);color:var(--ink)}
+input,select,textarea{width:100%;font-family:inherit;font-size:16px;padding:12px 13px;border:1.5px solid var(--line-strong);border-radius:11px;background:var(--card);color:var(--ink)}
 input.money{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:22px;letter-spacing:-.02em}
 .money-wrap{position:relative}
 .money-wrap .cur{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:15px;color:var(--ink-faint);pointer-events:none}
@@ -216,9 +229,23 @@ textarea{resize:vertical;min-height:44px}
   .type-grid{grid-template-columns:1fr}
   .beam-net .val{font-size:27px}
   .overlay{align-items:flex-end}
-  .sheet{border-radius:20px 20px 0 0;max-height:94vh}
+  .sheet{border-radius:20px 20px 0 0;max-height:94vh;padding-bottom:calc(28px + env(safe-area-inset-bottom))}
+  /* comfortable touch targets */
+  .prow .pay{padding:9px 13px}
+  .chip{padding:9px 15px}
+  .tool{padding:10px 13px}
+  .add-person{padding:13px}
+  .txn{padding:14px 16px}
+  .prow{padding:13px 16px}
 }
-@media(max-width:440px){ .cards{grid-template-columns:1fr} .accts{grid-template-columns:1fr} }
+@media(max-width:440px){
+  .cards{grid-template-columns:1fr} .accts{grid-template-columns:1fr}
+  .txn-head{gap:10px}
+  .toolbar{width:100%}
+  .toolbar .tool{flex:1;justify-content:center}
+}
+/* Touch devices have no hover — keep the delete affordance reachable */
+@media(hover:none){ .txn .del{opacity:.55} .card:hover{transform:none} }
 @media(prefers-reduced-motion:reduce){ *{animation:none!important;transition:none!important} }
 
 /* ---------- Auth ---------- */
@@ -249,7 +276,7 @@ textarea{resize:vertical;min-height:44px}
 
 <div id="loginScreen">
   <div class="login-card">
-    <div class="seal"><span>N</span></div>
+    <div class="seal"><svg class="seal-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M2 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg></div>
     <h1>Custody&nbsp;<em>Ledger</em></h1>
     <div class="sub">Sign in to reach your ledger on any device.</div>
     <label for="loginEmail">Email address</label>
@@ -262,7 +289,7 @@ textarea{resize:vertical;min-height:44px}
 <header class="top">
   <div class="top-inner">
     <div class="brand-block">
-      <div class="seal"><span>N</span></div>
+      <div class="seal"><svg class="seal-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M2 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg></div>
       <div>
         <div class="mark">Custody&nbsp;<em>Ledger</em></div>
         <div class="brand-sub">Petty Cash · Qatari Riyal</div>
@@ -353,6 +380,54 @@ const uid = () => Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const today = () => new Date().toISOString().slice(0,10);
 const longDate = () => new Date().toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"});
 const KEY = "custody_ledger_v1";
+
+/* ---------- Brand icons: favicon, Apple home-screen icon & PWA manifest ---------- */
+(function installIcons(){
+  const BRASS="#c9a24a", INK="#14161c";
+  const GLYPH=["M16 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z",
+               "M2 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z",
+               "M7 21h10","M12 3v18","M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"];
+  function addLink(rel,href,type){const l=document.createElement("link");l.rel=rel;l.href=href;if(type)l.type=type;document.head.appendChild(l);}
+  // Crisp vector favicon for browser tabs
+  const svg="<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'>"
+    +"<rect width='64' height='64' rx='14' fill='"+INK+"'/>"
+    +"<circle cx='32' cy='32' r='23' fill='none' stroke='"+BRASS+"' stroke-width='2'/>"
+    +"<g fill='none' stroke='"+BRASS+"' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round' transform='translate(16.6,16.6) scale(1.28)'>"
+    +GLYPH.map(d=>"<path d='"+d+"'/>").join("")+"</g></svg>";
+  addLink("icon","data:image/svg+xml,"+encodeURIComponent(svg),"image/svg+xml");
+  // Raster icons (Apple home-screen requires PNG; also used for the PWA manifest)
+  try{
+    const png=size=>{
+      const c=document.createElement("canvas");c.width=c.height=size;
+      const x=c.getContext("2d");
+      const r=size*0.22;
+      x.fillStyle=INK;x.beginPath();
+      if(x.roundRect)x.roundRect(0,0,size,size,r);else x.rect(0,0,size,size);
+      x.fill();
+      const g=x.createRadialGradient(size*.3,size*.28,0,size*.3,size*.28,size*.75);
+      g.addColorStop(0,"rgba(201,162,74,.22)");g.addColorStop(1,"rgba(201,162,74,0)");
+      x.fillStyle=g;x.fillRect(0,0,size,size);
+      x.strokeStyle=BRASS;x.lineCap="round";x.lineJoin="round";
+      x.lineWidth=size*.028;
+      x.beginPath();x.arc(size/2,size/2,size*.36,0,Math.PI*2);x.stroke();
+      const gs=size*.62/24;
+      x.save();x.translate(size/2-12*gs,size/2-12*gs);x.scale(gs,gs);
+      x.lineWidth=1.9;
+      GLYPH.forEach(d=>x.stroke(new Path2D(d)));
+      x.restore();
+      return c.toDataURL("image/png");
+    };
+    const p180=png(180),p192=png(192),p512=png(512);
+    addLink("apple-touch-icon",p180);
+    const manifest={name:"Custody Ledger",short_name:"Ledger",
+      description:"Petty-cash & personal-loan tracker in Qatari Riyal.",
+      display:"standalone",orientation:"portrait",background_color:INK,theme_color:INK,start_url:".",scope:".",
+      icons:[{src:p192,sizes:"192x192",type:"image/png",purpose:"any"},
+             {src:p512,sizes:"512x512",type:"image/png",purpose:"any maskable"}]};
+    const url=URL.createObjectURL(new Blob([JSON.stringify(manifest)],{type:"application/manifest+json"}));
+    addLink("manifest",url);
+  }catch(e){/* canvas unavailable — vector favicon still applies */}
+})();
 
 /* ---------- Icons ---------- */
 const P = {
