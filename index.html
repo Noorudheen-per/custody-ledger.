@@ -302,18 +302,6 @@ textarea{resize:vertical;min-height:44px}
 </head>
 <body>
 
-<div id="loginScreen">
-  <div class="login-card">
-    <div class="seal"><svg class="seal-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M2 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg></div>
-    <h1>Custody&nbsp;<em>Ledger</em></h1>
-    <div class="sub">Sign in to reach your ledger on any device.</div>
-    <label for="loginEmail">Email address</label>
-    <input id="loginEmail" type="email" inputmode="email" placeholder="you@example.com" autocomplete="email">
-    <button class="btn" id="loginBtn">Send me a sign-in link</button>
-    <div class="login-msg" id="loginMsg"></div>
-  </div>
-</div>
-
 <div id="lockScreen"></div>
 
 <header class="top">
@@ -504,6 +492,8 @@ let S = seed();
 /* ---------- Supabase config ---------- */
 const SUPABASE_URL = "https://oyjzchjuwzfkmurofhxu.supabase.co";
 const SUPABASE_KEY = "sb_publishable_18sEKnEULlhkQ7MPeTHU9A_gLPdHsiX";
+/* Single shared cloud identity — no email is ever sent. Your 6-digit passcode is the password. */
+const SYNC_EMAIL = "vault@custody-ledger.app";
 let SB=null, USER=null, pushTimer=null, ready=false;
 
 /* ---------- Local cache (offline safety) ---------- */
@@ -811,7 +801,7 @@ document.getElementById("btnReset").onclick=()=>{if(confirm("Reset everything ba
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeSheet();});
 
 /* ---------- App lock: passcode + Face ID (device-local) ---------- */
-const LOCK_KEY="custody_lock_v1", PIN_LEN=4;
+const LOCK_KEY="custody_lock_v1", PIN_LEN=6;
 const loadLock=()=>{try{return JSON.parse(localStorage.getItem(LOCK_KEY))||null;}catch(e){return null;}};
 const saveLock=v=>{try{localStorage.setItem(LOCK_KEY,JSON.stringify(v));}catch(e){}};
 const clearLock=()=>{try{localStorage.removeItem(LOCK_KEY);}catch(e){}};
@@ -845,14 +835,16 @@ async function bioVerify(id){
   return true;
 }
 let lockMode="unlock", pinBuf="", pinFirst="";
-function showLockScreen(setup){lockMode=setup?"setup":"unlock";pinBuf="";pinFirst="";renderLock();
-  document.getElementById("lockScreen").classList.add("show");if(!setup)maybeAutoBio();}
+function showLockScreen(mode){lockMode=mode||"unlock";pinBuf="";pinFirst="";renderLock();
+  document.getElementById("lockScreen").classList.add("show");if(lockMode==="unlock")maybeAutoBio();}
 function hideLockScreen(){document.getElementById("lockScreen").classList.remove("show");pinBuf="";pinFirst="";}
 function renderLock(){
-  const lock=loadLock(), hasBio=!!(lock&&lock.cred);
-  const sub = lockMode==="setup"
-    ? (pinFirst?"Confirm your passcode":"Create a 4-digit passcode")
-    : ((USER&&USER.email)?USER.email:"Enter your passcode to unlock");
+  const lock=loadLock(), hasBio=!!(lock&&lock.cred)&&lockMode==="unlock";
+  const sub = lockMode==="cloud"
+    ? "Enter a 6-digit passcode — the same code syncs every device."
+    : lockMode==="setup"
+    ? (pinFirst?"Confirm your passcode":"Create a 6-digit passcode")
+    : "Enter your passcode to unlock";
   document.getElementById("lockScreen").innerHTML=`<div class="lock-card">
     <div class="seal"><svg class="seal-mark" viewBox="0 0 24 24" aria-hidden="true">${SEAL_PATHS}</svg></div>
     <h1>Custody&nbsp;<em>Ledger</em></h1>
@@ -861,11 +853,11 @@ function renderLock(){
     <div class="lock-msg" id="lockMsg"></div>
     <div class="keypad">
       ${[1,2,3,4,5,6,7,8,9].map(n=>`<button class="key" data-k="${n}">${n}</button>`).join("")}
-      ${lockMode==="unlock"&&hasBio?`<button class="key fn face" data-k="bio" aria-label="Face ID">${ico("face")}</button>`:`<button class="key blank"></button>`}
+      ${hasBio?`<button class="key fn face" data-k="bio" aria-label="Face ID">${ico("face")}</button>`:`<button class="key blank"></button>`}
       <button class="key" data-k="0">0</button>
       <button class="key fn" data-k="del" aria-label="Delete">${ico("bksp")}</button>
     </div>
-    <div class="lock-foot">${lockMode==="setup"?"":"Not you? "}<button id="lockSignOut">${lockMode==="setup"?"Use a different account":"Sign out"}</button></div>
+    <div class="lock-foot">${lockMode==="unlock"?'Not you? <button id="lockSignOut">Sign out</button>':lockMode==="setup"?'<button id="lockSignOut">Use a different account</button>':""}</div>
   </div>`;
 }
 function updateDots(){const d=document.getElementById("lockDots");if(!d)return;d.classList.remove("err");
@@ -881,6 +873,14 @@ function pinKey(k){
   if(pinBuf.length===PIN_LEN)setTimeout(submitPin,110);
 }
 async function submitPin(){
+  if(lockMode==="cloud"){
+    const pin=pinBuf, m=document.getElementById("lockMsg");
+    if(m){m.className="lock-msg";m.textContent="Checking…";}
+    const res=await cloudSignIn(pin);
+    if(!res.ok){lockError(res.msg||"Couldn't sign in.");return;}
+    await afterCloudAuth(pin);
+    return;
+  }
   if(lockMode==="setup"){
     if(!pinFirst){pinFirst=pinBuf;pinBuf="";renderLock();return;}
     if(pinBuf!==pinFirst){pinFirst="";renderLock();lockError("Passcodes didn't match.");return;}
@@ -910,9 +910,7 @@ document.addEventListener("keydown",e=>{
   else if(e.key==="Backspace")pinKey("del");
 });
 
-/* ---------- Auth boot ---------- */
-function showLogin(){document.getElementById("loginScreen").classList.add("show");}
-function hideLogin(){document.getElementById("loginScreen").classList.remove("show");}
+/* ---------- Cloud sync + passcode boot (no email) ---------- */
 async function loadState(){
   let remote=null;
   try{
@@ -922,37 +920,51 @@ async function loadState(){
   if(remote){S=remote;saveLocal();}
   else{S=loadLocal()||seed();await pushRemote();}
 }
-async function onSignedIn(session){
-  USER=session.user;
-  const lock=loadLock();
-  if(lock&&lock.hash)showLockScreen(false);   // cover the ledger until unlocked
-  hideLogin();
+async function revealApp(){
   await loadState();
   ready=true; setSync("ok"); render();
-  if(!(lock&&lock.hash))showLockScreen(true);  // first time ever: set a passcode
+}
+/* Sign in to the shared cloud account with the passcode; create it the first time. */
+async function cloudSignIn(pin){
+  try{
+    const si=await SB.auth.signInWithPassword({email:SYNC_EMAIL,password:pin});
+    if(!si.error && si.data.session) return {ok:true};
+    const su=await SB.auth.signUp({email:SYNC_EMAIL,password:pin});
+    if(su.error){
+      const m=su.error.message||"";
+      if(/already/i.test(m)) return {ok:false,msg:"Wrong passcode."};
+      if(/rate|email/i.test(m)) return {ok:false,msg:"Turn off ‘Confirm email’ in Supabase Auth settings, then try again."};
+      return {ok:false,msg:m};
+    }
+    if(!su.data.session) return {ok:false,msg:"Turn off ‘Confirm email’ in Supabase, then re-enter your passcode."};
+    return {ok:true};
+  }catch(e){ return {ok:false,msg:"Network problem — check your connection."}; }
+}
+async function afterCloudAuth(pin){
+  try{ USER=(await SB.auth.getSession()).data.session.user; }catch(e){}
+  if(!USER) return;
+  const salt=randSalt(), hash=await sha(salt+":"+pin);
+  let cred=null;
+  if(await bioAvailable() && confirm("Enable Face ID / Touch ID to unlock on this device?")){
+    try{cred=await bioRegister();}catch(e){cred=null;}
+  }
+  saveLock({salt,hash,cred});
+  await revealApp();
+  hideLockScreen();
 }
 async function boot(){
-  SB=supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
-  let started=false;
-  const go=session=>{started=true; if(session)onSignedIn(session); else showLogin();};
-  SB.auth.onAuthStateChange((_e,session)=>{
-    if(!started){go(session);return;}
-    if(session){if(!USER||USER.id!==session.user.id)onSignedIn(session);}
-    else{USER=null;ready=false;showLogin();}
-  });
-  setTimeout(async()=>{ if(!started){const {data:{session}}=await SB.auth.getSession();go(session);} },900);
+  SB=supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
+  SB.auth.onAuthStateChange((e)=>{ if(e==="SIGNED_OUT") location.reload(); });
+  let session=null;
+  try{ session=(await SB.auth.getSession()).data.session; }catch(e){}
+  if(session){                     // returning device: cloud session persisted
+    USER=session.user;
+    showLockScreen("unlock");      // gate with passcode / Face ID
+    revealApp();                   // render behind the lock
+  }else{
+    showLockScreen("cloud");       // new device / first run: enter passcode to sync
+  }
 }
-document.getElementById("loginBtn").onclick=async ()=>{
-  const email=document.getElementById("loginEmail").value.trim();
-  const msg=document.getElementById("loginMsg"), btn=document.getElementById("loginBtn");
-  if(!email||!email.includes("@")){msg.className="login-msg err";msg.textContent="Please enter a valid email.";return;}
-  btn.disabled=true; msg.className="login-msg"; msg.textContent="Sending…";
-  const {error}=await SB.auth.signInWithOtp({email,options:{emailRedirectTo:location.origin+location.pathname}});
-  btn.disabled=false;
-  if(error){msg.className="login-msg err";msg.textContent=error.message;}
-  else{msg.className="login-msg ok";msg.textContent="Check your email for the sign-in link.";}
-};
-document.getElementById("loginEmail").addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("loginBtn").click();});
 document.getElementById("signOutBtn").onclick=async ()=>{clearLock();try{await SB.auth.signOut();}catch(e){} location.reload();};
 
 boot();
