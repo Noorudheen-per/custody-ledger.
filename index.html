@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<meta name="theme-color" content="#14161c">
+<title>Custody Ledger · Petty Cash</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500;1,9..144,600&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#14161c; --ink-2:#20242d; --ink-soft:#464d5a; --ink-faint:#7a828f;
+  --paper:#ebeeea; --paper-2:#e2e6e0;
+  --card:#ffffff; --line:#e4e6e6; --line-strong:#d0d3d3;
+  --emerald:#0f6b4e; --emerald-bg:#e7f1eb;
+  --clay:#b23c2c; --clay-bg:#f6e8e3;
+  --brass:#a67c22; --brass-2:#c9a24a; --brass-bg:#f3ecd9;
+  --shadow:0 1px 2px rgba(20,24,33,.05),0 10px 28px rgba(20,24,33,.06);
+  --shadow-sm:0 1px 2px rgba(20,24,33,.06);
+  --r:15px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{font-family:'Inter',system-ui,sans-serif;background:linear-gradient(178deg,#f2f4f0 0%,#e7ebe5 46%,#e2e7df 100%);background-attachment:fixed;color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased;padding-bottom:104px}
+.num{font-family:'IBM Plex Mono',ui-monospace,monospace;font-feature-settings:"tnum" 1;letter-spacing:-.02em}
+h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;letter-spacing:-.01em;line-height:1.08}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+svg{display:block}
+:focus-visible{outline:2.5px solid var(--brass);outline-offset:2px;border-radius:6px}
+.ico{width:1em;height:1em;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---------- Masthead ---------- */
+.top{background:var(--ink);color:#fff;padding:20px 20px 30px;position:relative;overflow:hidden}
+.top::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 47px,rgba(255,255,255,.028) 47px 48px);pointer-events:none}
+.top::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,transparent,var(--brass),transparent);opacity:.7}
+.top-inner{max-width:1080px;margin:0 auto;position:relative;z-index:1;display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.brand-block{display:flex;align-items:center;gap:14px}
+.seal{width:44px;height:44px;border-radius:50%;border:1.5px solid var(--brass);display:grid;place-items:center;flex-shrink:0;background:radial-gradient(circle at 30% 30%,rgba(201,162,74,.18),transparent)}
+.seal span{font-family:'Fraunces',serif;font-weight:600;font-style:italic;color:var(--brass-2);font-size:22px}
+.mark{font-family:'Fraunces',serif;font-weight:600;font-size:25px;color:#fff;line-height:1}
+.mark em{font-style:italic;color:var(--brass-2)}
+.brand-sub{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#8e95a2;margin-top:5px}
+.asof{text-align:right;font-size:11px;color:#8e95a2;letter-spacing:.04em}
+.asof b{display:block;font-family:'IBM Plex Mono',monospace;color:#dfe3e8;font-size:13px;letter-spacing:0;margin-top:2px}
+.custodian{max-width:1080px;margin:14px auto 0;position:relative;z-index:1;font-size:13px;color:#aab0bd}
+.custodian b{color:#e6e9ee;font-weight:600}
+
+/* ---------- Balance beam (signature) ---------- */
+.beam-wrap{max-width:1080px;margin:-16px auto 0;padding:0 20px;position:relative;z-index:3}
+.beam{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:22px 24px 22px;border:1px solid var(--line)}
+.beam-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+.beam-eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--brass);font-weight:600}
+.beam-head h2{font-size:19px;margin-top:5px}
+.beam-head .note{font-size:12.5px;color:var(--ink-faint);margin-top:3px}
+.beam-net{text-align:right}
+.beam-net .lbl{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint)}
+.beam-net .val{font-size:34px;font-weight:600;line-height:1;font-family:'IBM Plex Mono',monospace;letter-spacing:-.03em;margin-top:2px}
+.beam-bar{height:40px;border-radius:10px;background:var(--paper);display:flex;overflow:hidden;border:1px solid var(--line);position:relative}
+.beam-bar .seg{display:flex;align-items:center;width:50%;transition:width .7s cubic-bezier(.4,0,.15,1);min-width:0}
+.beam-bar .owe{background:linear-gradient(180deg,#c04432,#a8351f);justify-content:flex-start}
+.beam-bar .due{background:linear-gradient(180deg,#12795a,#0d5f45);justify-content:flex-end}
+.beam-bar .seg span{font-size:12px;font-weight:600;color:#fff;padding:0 13px;white-space:nowrap;font-family:'IBM Plex Mono',monospace;opacity:.96}
+.beam-mid{position:absolute;left:50%;top:-3px;bottom:-3px;width:2px;background:var(--ink);transform:translateX(-1px);border-radius:2px}
+.beam-mid::after{content:"";position:absolute;left:50%;top:-5px;width:8px;height:8px;background:var(--ink);border-radius:50%;transform:translateX(-50%)}
+.beam-legend{display:flex;justify-content:space-between;margin-top:12px;font-size:12px;color:var(--ink-soft)}
+.beam-legend .k{display:inline-flex;align-items:center;gap:7px}
+.beam-legend b{font-family:'IBM Plex Mono',monospace;font-weight:600;color:var(--ink)}
+.dot{width:9px;height:9px;border-radius:2px;display:inline-block}
+.dot.owe{background:var(--clay)} .dot.due{background:var(--emerald)}
+
+/* ---------- Layout ---------- */
+.wrap{max-width:1080px;margin:0 auto;padding:26px 20px 0}
+.sh{display:flex;align-items:center;gap:12px;margin:32px 0 14px}
+.sh .lbl{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);font-weight:600}
+.sh::after{content:"";flex:1;height:1px;background:var(--line)}
+.sh .n{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--brass);font-weight:600}
+
+/* ---------- Summary cards ---------- */
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.card{background:var(--card);border-radius:var(--r);padding:16px 17px 17px;box-shadow:var(--shadow-sm);border:1px solid var(--line);position:relative;overflow:hidden;transition:transform .15s,box-shadow .15s}
+.card:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.card .top-row{display:flex;justify-content:space-between;align-items:center}
+.card .cap{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);font-weight:600}
+.card .cic{font-size:17px;color:var(--ink-faint);opacity:.8}
+.card .amt{font-size:25px;font-weight:600;margin-top:11px;line-height:1;font-family:'IBM Plex Mono',monospace;letter-spacing:-.03em}
+.card .sub{font-size:12px;color:var(--ink-faint);margin-top:7px}
+.card .rail{position:absolute;left:0;top:0;bottom:0;width:3px}
+.card.pos .amt{color:var(--emerald)} .card.pos .rail{background:var(--emerald)} .card.pos .cic{color:var(--emerald)}
+.card.neg .amt{color:var(--clay)} .card.neg .rail{background:var(--clay)} .card.neg .cic{color:var(--clay)}
+.card.hold .amt{color:var(--ink)} .card.hold .rail{background:var(--ink)}
+.card.warn .amt{color:var(--brass)} .card.warn .rail{background:var(--brass)} .card.warn .cic{color:var(--brass)}
+
+/* ---------- Accounts ---------- */
+.accts{display:grid;grid-template-columns:1fr 1fr 1.35fr;gap:12px}
+.acct{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:17px;box-shadow:var(--shadow-sm)}
+.acct .an{font-size:12px;font-weight:600;color:var(--ink-soft);display:flex;align-items:center;gap:8px;letter-spacing:.02em}
+.acct .an .ico{width:16px;height:16px;color:var(--ink-faint)}
+.acct .ab{font-size:24px;font-weight:600;margin:11px 0 3px;font-family:'IBM Plex Mono',monospace;letter-spacing:-.03em}
+.acct .meta{font-size:11px;color:var(--ink-faint)}
+/* credit card visual */
+.creditcard{background:linear-gradient(140deg,#242832 0%,#14161c 70%);border:none;color:#fff;position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;min-height:140px}
+.creditcard::after{content:"";position:absolute;right:-40px;top:-40px;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,rgba(201,162,74,.16),transparent 70%)}
+.cc-top{display:flex;justify-content:space-between;align-items:flex-start;position:relative;z-index:1}
+.cc-label{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#9aa1ae}
+.cc-chip{width:30px;height:22px;border-radius:5px;background:linear-gradient(135deg,var(--brass-2),var(--brass));position:relative}
+.cc-chip::before{content:"";position:absolute;inset:5px 4px;border:1px solid rgba(0,0,0,.25);border-radius:2px}
+.cc-owed{font-family:'IBM Plex Mono',monospace;font-size:26px;font-weight:600;color:#fff;letter-spacing:-.03em;position:relative;z-index:1}
+.cc-owed small{display:block;font-family:'Inter';font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#9aa1ae;font-weight:500;margin-bottom:3px}
+.cc-foot{position:relative;z-index:1}
+.cc-line{display:flex;justify-content:space-between;font-size:11px;color:#c2c7d0;margin-bottom:6px}
+.cc-line .num{color:#eceef1}
+.cc-bar{height:5px;border-radius:3px;background:rgba(255,255,255,.14);overflow:hidden}
+.cc-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--brass-2),#d97a5f);border-radius:3px;transition:width .7s cubic-bezier(.4,0,.15,1)}
+
+/* ---------- People ledger ---------- */
+.ledger{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.lcol{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow-sm);overflow:hidden}
+.lcol-h{padding:14px 17px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line)}
+.lcol-h .t{font-family:'Fraunces',serif;font-size:16px;font-weight:600;display:flex;align-items:center;gap:8px}
+.lcol-h .t .ico{width:16px;height:16px}
+.lcol.owe .lcol-h{background:var(--clay-bg)} .lcol.owe .lcol-h .t{color:var(--clay)}
+.lcol.due .lcol-h{background:var(--emerald-bg)} .lcol.due .lcol-h .t{color:var(--emerald)}
+.lcol-h .tot{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:15px}
+.prow{display:flex;align-items:center;gap:11px;padding:11px 17px;border-bottom:1px solid var(--line)}
+.prow:last-child{border-bottom:none}
+.av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:600;flex-shrink:0;font-family:'Inter'}
+.owe .av{background:var(--clay-bg);color:var(--clay)} .due .av{background:var(--emerald-bg);color:var(--emerald)}
+.prow .nm{flex:1;min-width:0}
+.prow .nm b{font-weight:600;font-size:14px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prow .nm small{color:var(--ink-faint);font-size:11px}
+.mini-bar{height:4px;border-radius:2px;background:var(--paper-2);overflow:hidden;margin-top:5px;max-width:130px}
+.mini-bar i{display:block;height:100%;background:var(--emerald);border-radius:2px}
+.prow .bal{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:14px;text-align:right;white-space:nowrap}
+.prow .pay{font-size:12px;font-weight:600;padding:7px 11px;border-radius:9px;background:var(--paper);border:1px solid var(--line-strong);color:var(--ink-soft);white-space:nowrap;transition:.12s}
+.prow .pay:hover{background:var(--ink);color:#fff;border-color:var(--ink)}
+.settled{opacity:.5} .settled .bal{text-decoration:line-through}
+.chip-done{font-size:10px;font-weight:600;color:var(--emerald);letter-spacing:.06em;text-transform:uppercase}
+.lcol-foot{padding:11px 17px}
+.add-person{width:100%;font-size:12px;font-weight:600;color:var(--ink-faint);padding:10px;border:1px dashed var(--line-strong);border-radius:10px;background:transparent;transition:.12s}
+.add-person:hover{color:var(--ink);border-color:var(--ink-soft);background:var(--paper)}
+
+/* ---------- Activity ---------- */
+.txn-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.filters{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font-size:12px;font-weight:500;padding:7px 13px;border-radius:20px;background:var(--card);border:1px solid var(--line);color:var(--ink-soft);transition:.12s}
+.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.txn-list{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow-sm);overflow:hidden;margin-top:12px}
+.txn{display:flex;align-items:center;gap:13px;padding:13px 17px;border-bottom:1px solid var(--line)}
+.txn:last-child{border-bottom:none}
+.txn .ic{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;flex-shrink:0}
+.txn .ic .ico{width:18px;height:18px}
+.txn .d{flex:1;min-width:0}
+.txn .d b{font-weight:600;font-size:14px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.txn .d small{color:var(--ink-faint);font-size:11.5px}
+.txn .a{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:14px;white-space:nowrap;text-align:right}
+.txn .a.plus{color:var(--emerald)} .txn .a.minus{color:var(--clay)}
+.txn .del{opacity:0;color:var(--ink-faint);padding:4px 6px;transition:opacity .15s;font-size:0}
+.txn .del .ico{width:15px;height:15px}
+.txn:hover .del{opacity:1} .txn .del:hover{color:var(--clay)}
+.empty{padding:42px 20px;text-align:center;color:var(--ink-faint);font-size:14px}
+
+/* ---------- toolbar ---------- */
+.toolbar{display:flex;gap:8px;flex-wrap:wrap}
+.tool{font-size:12px;font-weight:600;color:var(--ink-soft);padding:8px 12px;border:1px solid var(--line);border-radius:9px;background:var(--card);display:inline-flex;align-items:center;gap:6px;transition:.12s}
+.tool .ico{width:14px;height:14px}
+.tool:hover{border-color:var(--ink-soft)}
+.tool.danger:hover{color:var(--clay);border-color:var(--clay)}
+.foot{max-width:1080px;margin:28px auto 0;padding:16px 20px 0;font-size:11.5px;color:var(--ink-faint);border-top:1px solid var(--line);text-align:center}
+
+/* ---------- FAB ---------- */
+.fab{position:fixed;right:20px;bottom:20px;z-index:40;background:var(--ink);color:#fff;border-radius:16px;padding:15px 22px;font-weight:600;font-size:15px;box-shadow:0 12px 30px rgba(20,24,33,.32);display:flex;align-items:center;gap:9px;transition:.15s}
+.fab:hover{background:#000;transform:translateY(-2px)}
+.fab .ico{width:18px;height:18px;stroke-width:2}
+
+/* ---------- Modal ---------- */
+.overlay{position:fixed;inset:0;background:rgba(20,24,33,.5);backdrop-filter:blur(4px);z-index:50;display:none;align-items:center;justify-content:center}
+.overlay.show{display:flex}
+.sheet{background:var(--card);width:100%;max-width:540px;max-height:92vh;overflow-y:auto;border-radius:20px;padding:24px 24px 28px;animation:rise .28s cubic-bezier(.2,.8,.2,1)}
+@keyframes rise{from{transform:translateY(24px);opacity:.4}to{transform:translateY(0);opacity:1}}
+.sheet-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px}
+.sheet h2{font-size:21px}
+.sheet .sub{font-size:13px;color:var(--ink-faint);margin-top:3px}
+.xbtn{color:var(--ink-faint);padding:4px}.xbtn .ico{width:20px;height:20px}
+.type-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px}
+.tbtn{text-align:left;padding:11px 12px;border:1.5px solid var(--line);border-radius:12px;background:var(--card);transition:.12s;display:flex;gap:10px;align-items:flex-start}
+.tbtn .tic{width:30px;height:30px;border-radius:8px;background:var(--paper);display:grid;place-items:center;flex-shrink:0;color:var(--ink-soft)}
+.tbtn .tic .ico{width:16px;height:16px}
+.tbtn .tt{font-size:13px;font-weight:600}
+.tbtn .td{font-size:10.5px;color:var(--ink-faint);margin-top:2px;line-height:1.3}
+.tbtn:hover{border-color:var(--line-strong)}
+.tbtn.sel{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.tbtn.sel .tic{background:var(--ink);color:#fff}
+label.fl{display:block;font-size:12px;font-weight:600;color:var(--ink-soft);margin:15px 0 6px;letter-spacing:.02em}
+input,select,textarea{width:100%;font-family:inherit;font-size:15px;padding:12px 13px;border:1.5px solid var(--line-strong);border-radius:11px;background:var(--card);color:var(--ink)}
+input.money{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:22px;letter-spacing:-.02em}
+.money-wrap{position:relative}
+.money-wrap .cur{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:15px;color:var(--ink-faint);pointer-events:none}
+.money-wrap input{padding-left:46px}
+textarea{resize:vertical;min-height:44px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.effect{background:var(--brass-bg);border:1px solid #e6d9b3;border-radius:12px;padding:12px 14px;margin-top:16px;font-size:13px;color:var(--ink-soft);display:flex;gap:9px;align-items:flex-start}
+.effect .ico{width:16px;height:16px;color:var(--brass);flex-shrink:0;margin-top:2px}
+.effect b{color:var(--ink);font-weight:600}
+.sheet-actions{display:flex;gap:10px;margin-top:20px}
+.btn{padding:14px;border-radius:12px;font-weight:600;font-size:15px;text-align:center;transition:.12s}
+.btn.primary{background:var(--ink);color:#fff;flex:1}.btn.primary:hover{background:#000}
+.btn.ghost{background:var(--paper);color:var(--ink-soft);border:1px solid var(--line-strong);padding:14px 20px}
+.btn.ghost:hover{background:var(--line)}
+
+@media(max-width:760px){
+  .cards{grid-template-columns:1fr 1fr}
+  .accts{grid-template-columns:1fr 1fr}
+  .creditcard{grid-column:1 / -1}
+  .ledger{grid-template-columns:1fr}
+  .type-grid{grid-template-columns:1fr}
+  .beam-net .val{font-size:27px}
+  .overlay{align-items:flex-end}
+  .sheet{border-radius:20px 20px 0 0;max-height:94vh}
+}
+@media(max-width:440px){ .cards{grid-template-columns:1fr} .accts{grid-template-columns:1fr} }
+@media(prefers-reduced-motion:reduce){ *{animation:none!important;transition:none!important} }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-inner">
+    <div class="brand-block">
+      <div class="seal"><span>N</span></div>
+      <div>
+        <div class="mark">Custody&nbsp;<em>Ledger</em></div>
+        <div class="brand-sub">Petty Cash · Qatari Riyal</div>
+      </div>
+    </div>
+    <div class="asof">As of<b id="asofDate">—</b></div>
+  </div>
+  <div class="custodian">Fund custodian <b id="custName">Nooru</b> · Al Habari</div>
+</header>
+
+<div class="beam-wrap">
+  <div class="beam">
+    <div class="beam-head">
+      <div>
+        <div class="beam-eyebrow">The balance</div>
+        <h2>Overall position</h2>
+        <div class="note">Everything owed to you, set against everything you must pay.</div>
+      </div>
+      <div class="beam-net">
+        <div class="lbl">Net</div>
+        <div class="val" id="netVal">—</div>
+      </div>
+    </div>
+    <div class="beam-bar" id="beamBar">
+      <div class="seg owe" id="segOwe"><span id="oweTxt"></span></div>
+      <div class="beam-mid"></div>
+      <div class="seg due" id="segDue"><span id="dueTxt"></span></div>
+    </div>
+    <div class="beam-legend">
+      <span class="k"><i class="dot owe"></i> You must pay · <b class="num" id="legOwe">—</b></span>
+      <span class="k"><b class="num" id="legDue">—</b> · owed to you <i class="dot due"></i></span>
+    </div>
+  </div>
+</div>
+
+<main class="wrap">
+
+  <div class="sh"><span class="n">01</span><span class="lbl">Summary</span></div>
+  <div class="cards" id="cards"></div>
+
+  <div class="sh"><span class="n">02</span><span class="lbl">Accounts</span></div>
+  <div class="accts" id="accts"></div>
+
+  <div class="sh"><span class="n">03</span><span class="lbl">People</span></div>
+  <div class="ledger">
+    <div class="lcol owe">
+      <div class="lcol-h"><span class="t"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 16V8M8.5 11.5L12 8l3.5 3.5"/></svg>I owe them</span><span class="tot num" id="oweTot">—</span></div>
+      <div id="oweList"></div>
+      <div class="lcol-foot"><button class="add-person" data-dir="oweThem">+ Add someone I borrowed from</button></div>
+    </div>
+    <div class="lcol due">
+      <div class="lcol-h"><span class="t"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8.5 12.5L12 16l3.5-3.5"/></svg>They owe me</span><span class="tot num" id="dueTot">—</span></div>
+      <div id="dueList"></div>
+      <div class="lcol-foot"><button class="add-person" data-dir="oweMe">+ Add someone who borrowed</button></div>
+    </div>
+  </div>
+
+  <div class="sh"><span class="n">04</span><span class="lbl">Activity</span></div>
+  <div class="txn-head">
+    <div class="filters" id="filters">
+      <button class="chip on" data-f="all">All</button>
+      <button class="chip" data-f="in">Money in</button>
+      <button class="chip" data-f="out">Money out</button>
+      <button class="chip" data-f="people">People</button>
+    </div>
+    <div class="toolbar">
+      <button class="tool" id="btnExport"><svg class="ico" viewBox="0 0 24 24"><path d="M12 3v12M7 11l5 4 5-4"/><path d="M4 19h16"/></svg>Backup</button>
+      <button class="tool" id="btnImport"><svg class="ico" viewBox="0 0 24 24"><path d="M12 15V3M7 7l5-4 5 4"/><path d="M4 19h16"/></svg>Restore</button>
+      <button class="tool danger" id="btnReset"><svg class="ico" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5"/></svg>Reset</button>
+      <input type="file" id="fileIn" accept="application/json" hidden>
+    </div>
+  </div>
+  <div class="txn-list" id="txnList"></div>
+
+  <div class="foot">Balances are computed live from your entries. Data stays on this device — use <b>Backup</b> regularly to keep a copy.</div>
+</main>
+
+<button class="fab" id="fab"><svg class="ico" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>New entry</button>
+
+<div class="overlay" id="overlay"><div class="sheet" id="sheet"></div></div>
+
+<script>
+"use strict";
+const QR = n => "QR " + Math.round(Math.abs(n)).toLocaleString("en-US");
+const signQR = n => (n<0?"−":"") + "QR " + Math.round(Math.abs(n)).toLocaleString("en-US");
+const uid = () => Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const today = () => new Date().toISOString().slice(0,10);
+const longDate = () => new Date().toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"});
+const KEY = "custody_ledger_v1";
+
+/* ---------- Icons ---------- */
+const P = {
+  receipt:'<path d="M6 3h12v18l-2.5-1.5L13 21l-2.5-1.5L8 21l-2-1.5V3z"/><path d="M9 8h6M9 12h6M9 15.5h3"/>',
+  building:'<path d="M4 21V7l8-4 8 4v14"/><path d="M9 21v-5h6v5"/><path d="M9 10h.01M15 10h.01M9 13h.01M15 13h.01"/>',
+  banknote:'<rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.4"/><path d="M6.5 9h0M17.5 15h0"/>',
+  refund:'<path d="M3.5 12a8.5 8.5 0 1 0 2.8-6.3"/><path d="M3 4v4h4"/>',
+  bank:'<path d="M3 10l9-6 9 6"/><path d="M4 10v9M20 10v9M4 19.5h16"/><path d="M8 10.5v8M12 10.5v8M16 10.5v8"/>',
+  down:'<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8.5 12.5L12 16l3.5-3.5"/>',
+  up:'<circle cx="12" cy="12" r="9"/><path d="M12 16V8M8.5 11.5L12 8l3.5 3.5"/>',
+  check:'<circle cx="12" cy="12" r="9"/><path d="M8.2 12.4l2.6 2.6L16 9.6"/>',
+  coins:'<ellipse cx="8.5" cy="7" rx="5.5" ry="2.8"/><path d="M3 7v4.5c0 1.5 2.5 2.8 5.5 2.8"/><ellipse cx="15.5" cy="14" rx="5.5" ry="2.8"/><path d="M10 14v3.5c0 1.5 2.5 2.8 5.5 2.8s5.5-1.3 5.5-2.8V14"/>',
+  card:'<rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19"/><path d="M6 15h4"/>',
+  cardpay:'<rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19"/><path d="M14.5 15.5l1.8 1.8L20 13.8"/>',
+  wallet:'<path d="M3 8a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8z"/><path d="M3 9h18"/><path d="M16.5 13h.01"/>',
+  trash:'<path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13"/>',
+  spark:'<path d="M12 3v3M12 18v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M3 12h3M18 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>',
+  close:'<path d="M6 6l12 12M18 6L6 18"/>',
+};
+const ico = (k,cls="ico") => `<svg class="${cls}" viewBox="0 0 24 24">${P[k]||""}</svg>`;
+
+/* ---------- Opening data ---------- */
+function seed(){
+  const p=(name,dir,bal,monthly=0)=>({id:uid(),name,dir,monthly,openBal:bal});
+  return {
+    custodian:"Nooru",
+    accounts:{debit:{name:"Debit Card",open:2637}, wallet:{name:"Cash Wallet",open:180}},
+    creditCard:{owedOpen:7591,limit:8300},
+    company:{owePettyOpen:8957, reimburseOpen:7946},
+    people:[
+      p("Minhaj","oweThem",1612),p("Nizar","oweThem",2200),p("Ali","oweThem",17),
+      p("Rashid","oweThem",4250),p("Mubashir K","oweThem",1120),
+      p("Umar","oweMe",100),p("Nuss","oweMe",2959,450),p("Jaseem","oweMe",300),
+      p("Rona","oweMe",50),p("Lulu","oweMe",1200)
+    ],
+    txns:[]
+  };
+}
+let S = load();
+function load(){ try{const r=localStorage.getItem(KEY);return r?JSON.parse(r):seed();}catch(e){return seed();} }
+function save(){ localStorage.setItem(KEY, JSON.stringify(S)); }
+
+/* ---------- Ledger engine ---------- */
+function compute(){
+  const acc={}; for(const k in S.accounts) acc[k]=S.accounts[k].open;
+  let ccOwed=S.creditCard.owedOpen, oweParty=S.company.owePettyOpen, reimburse=S.company.reimburseOpen;
+  const pbal={}; S.people.forEach(p=>pbal[p.id]=p.openBal);
+  for(const t of S.txns){ const a=t.amount; switch(t.type){
+    case "spend_personal": acc[t.account]-=a; oweParty+=a; break;
+    case "spend_business": acc[t.account]-=a; reimburse+=a; break;
+    case "petty_topup":    acc[t.account]+=a; break;
+    case "reimburse_recv": reimburse-=a; acc[t.account]+=a; break;
+    case "repay_company":  acc[t.account]-=a; oweParty-=a; break;
+    case "loan_taken":     acc[t.account]+=a; if(pbal[t.person]!=null)pbal[t.person]+=a; break;
+    case "loan_given":     acc[t.account]-=a; if(pbal[t.person]!=null)pbal[t.person]+=a; break;
+    case "repay_to_person":acc[t.account]-=a; if(pbal[t.person]!=null)pbal[t.person]-=a; break;
+    case "repay_from_person":acc[t.account]+=a; if(pbal[t.person]!=null)pbal[t.person]-=a; break;
+    case "cc_spend":       ccOwed+=a; break;
+    case "cc_payment":     acc[t.account]-=a; ccOwed-=a; break;
+  }}
+  const cashOnHand=Object.values(acc).reduce((s,v)=>s+v,0);
+  let oweThem=0,oweMe=0;
+  S.people.forEach(p=>{const b=pbal[p.id];if(p.dir==="oweThem")oweThem+=Math.max(b,0);else oweMe+=Math.max(b,0);});
+  const due=reimburse+oweMe+cashOnHand, owe=oweParty+oweThem+ccOwed;
+  return {acc,ccOwed,oweParty,reimburse,pbal,cashOnHand,oweThem,oweMe,due,owe,net:due-owe};
+}
+
+/* ---------- Render ---------- */
+const esc=s=>String(s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+const empty=t=>`<div class="empty">${t}</div>`;
+const initials=n=>n.trim().split(/\s+/).map(w=>w[0]).slice(0,2).join("").toUpperCase();
+
+function render(){
+  const c=compute();
+  document.getElementById("custName").textContent=S.custodian;
+  document.getElementById("asofDate").textContent=longDate();
+
+  document.getElementById("netVal").textContent=signQR(c.net);
+  document.getElementById("netVal").style.color=c.net<0?"var(--clay)":"var(--emerald)";
+  const total=c.owe+c.due||1, owePct=c.owe/total*100, duePct=c.due/total*100;
+  requestAnimationFrame(()=>{
+    document.getElementById("segOwe").style.width=owePct+"%";
+    document.getElementById("segDue").style.width=duePct+"%";
+  });
+  document.getElementById("oweTxt").textContent=owePct>15?QR(c.owe):"";
+  document.getElementById("dueTxt").textContent=duePct>15?QR(c.due):"";
+  document.getElementById("legOwe").textContent=QR(c.owe);
+  document.getElementById("legDue").textContent=QR(c.due);
+
+  const cards=[
+    {cls:"hold",ic:"wallet",cap:"Cash on hand",amt:QR(c.cashOnHand),sub:"Company money you hold"},
+    {cls:"neg", ic:"bank",  cap:"Owe company", amt:QR(c.oweParty),  sub:"Petty cash spent personally"},
+    {cls:"pos", ic:"refund",cap:"Reimbursement",amt:QR(c.reimburse),sub:"Bills submitted to office"},
+    {cls:"neg", ic:"up",    cap:"I owe people", amt:QR(c.oweThem),  sub:"Borrowed from friends"},
+    {cls:"pos", ic:"down",  cap:"People owe me",amt:QR(c.oweMe),    sub:"Lent out"},
+    {cls:"warn",ic:"card",  cap:"Credit card",  amt:QR(c.ccOwed),   sub:"Outstanding to repay"},
+  ];
+  document.getElementById("cards").innerHTML=cards.map(k=>
+    `<div class="card ${k.cls}"><span class="rail"></span>
+     <div class="top-row"><span class="cap">${k.cap}</span><span class="cic">${ico(k.ic)}</span></div>
+     <div class="amt">${k.amt}</div><div class="sub">${k.sub}</div></div>`).join("");
+
+  let ah="";
+  const aicon={debit:"card",wallet:"wallet"};
+  for(const key in S.accounts){
+    ah+=`<div class="acct"><div class="an">${ico(aicon[key]||"wallet")} ${esc(S.accounts[key].name)}</div>
+      <div class="ab">${signQR(c.acc[key])}</div><div class="meta">Available balance</div></div>`;
+  }
+  const ccUse=Math.min(c.ccOwed/S.creditCard.limit*100,100), ccAvail=S.creditCard.limit-c.ccOwed;
+  ah+=`<div class="acct creditcard">
+    <div class="cc-top"><span class="cc-label">Credit Card</span><span class="cc-chip"></span></div>
+    <div class="cc-owed"><small>Outstanding</small>${QR(c.ccOwed)}</div>
+    <div class="cc-foot">
+      <div class="cc-line"><span>${QR(ccAvail)} available</span><span class="num">limit ${QR(S.creditCard.limit)}</span></div>
+      <div class="cc-bar"><i style="width:0%" data-w="${ccUse}"></i></div>
+    </div></div>`;
+  document.getElementById("accts").innerHTML=ah;
+  requestAnimationFrame(()=>{const b=document.querySelector(".cc-bar i");if(b)b.style.width=b.dataset.w+"%";});
+
+  document.getElementById("oweTot").textContent=QR(c.oweThem);
+  document.getElementById("dueTot").textContent=QR(c.oweMe);
+  const rowHtml=p=>{
+    const b=c.pbal[p.id], settled=Math.round(b)<=0;
+    let meta="";
+    if(p.monthly){
+      const paid=Math.max(p.openBal-Math.max(b,0),0), pct=p.openBal?Math.min(paid/p.openBal*100,100):0;
+      meta=`<small>${QR(p.monthly)}/month · ${QR(paid)} of ${QR(p.openBal)} back</small>
+            <div class="mini-bar"><i style="width:${pct}%"></i></div>`;
+    }
+    const payLbl=p.dir==="oweThem"?"I paid":"They paid";
+    return `<div class="prow ${settled?'settled':''}">
+      <div class="av">${initials(p.name)}</div>
+      <div class="nm"><b>${esc(p.name)}</b>${meta}</div>
+      <div class="bal">${QR(Math.max(b,0))}</div>
+      ${settled?'<span class="chip-done">settled</span>':`<button class="pay" data-pay="${p.id}">${payLbl}</button>`}
+    </div>`;
+  };
+  document.getElementById("oweList").innerHTML=S.people.filter(p=>p.dir==="oweThem").map(rowHtml).join("")||empty("No one yet");
+  document.getElementById("dueList").innerHTML=S.people.filter(p=>p.dir==="oweMe").map(rowHtml).join("")||empty("No one yet");
+
+  renderTxns();
+}
+
+const TXN_META={
+  spend_personal:{icon:"receipt",bg:"var(--clay-bg)",fg:"var(--clay)",dir:"out",label:"Personal spend"},
+  spend_business:{icon:"building",bg:"var(--brass-bg)",fg:"var(--brass)",dir:"out",label:"Business spend"},
+  petty_topup:{icon:"banknote",bg:"var(--emerald-bg)",fg:"var(--emerald)",dir:"in",label:"Petty cash top-up"},
+  reimburse_recv:{icon:"refund",bg:"var(--emerald-bg)",fg:"var(--emerald)",dir:"in",label:"Reimbursement received"},
+  repay_company:{icon:"bank",bg:"var(--clay-bg)",fg:"var(--clay)",dir:"out",label:"Repaid company"},
+  loan_taken:{icon:"down",bg:"var(--emerald-bg)",fg:"var(--emerald)",dir:"in",people:1,label:"Borrowed"},
+  loan_given:{icon:"up",bg:"var(--clay-bg)",fg:"var(--clay)",dir:"out",people:1,label:"Lent"},
+  repay_to_person:{icon:"check",bg:"var(--clay-bg)",fg:"var(--clay)",dir:"out",people:1,label:"Paid back"},
+  repay_from_person:{icon:"coins",bg:"var(--emerald-bg)",fg:"var(--emerald)",dir:"in",people:1,label:"Received back"},
+  cc_spend:{icon:"card",bg:"var(--clay-bg)",fg:"var(--clay)",dir:"out",label:"Card spend"},
+  cc_payment:{icon:"cardpay",bg:"var(--clay-bg)",fg:"var(--clay)",dir:"out",label:"Card payment"},
+};
+let filter="all";
+function renderTxns(){
+  const list=[...S.txns].sort((a,b)=>(b.date+b.id).localeCompare(a.date+a.id));
+  const f=list.filter(t=>{const m=TXN_META[t.type];
+    if(filter==="all")return true; if(filter==="in")return m.dir==="in";
+    if(filter==="out")return m.dir==="out"; if(filter==="people")return m.people;});
+  if(!f.length){document.getElementById("txnList").innerHTML=empty("No entries yet. Tap “New entry” to begin.");return;}
+  document.getElementById("txnList").innerHTML=f.map(t=>{
+    const m=TXN_META[t.type];
+    const who=t.person?(S.people.find(p=>p.id===t.person)?.name||""):"";
+    const acctN=t.account?S.accounts[t.account]?.name:"";
+    const bits=[acctN,t.note].filter(Boolean).join(" · ");
+    const sgn=m.dir==="in"?"plus":"minus", pfx=m.dir==="in"?"+":"−";
+    return `<div class="txn">
+      <div class="ic" style="background:${m.bg};color:${m.fg}">${ico(m.icon)}</div>
+      <div class="d"><b>${m.label}${who?": "+esc(who):""}</b><small>${esc(bits)||"—"} · ${t.date}</small></div>
+      <div class="a ${sgn}">${pfx}${QR(t.amount)}</div>
+      <button class="del" data-del="${t.id}" title="Delete">${ico("trash")}</button>
+    </div>`;}).join("");
+}
+
+/* ---------- Entry sheet ---------- */
+const TYPES=[
+  {t:"spend_personal",ic:"receipt",tt:"Personal spend",td:"Company money for myself"},
+  {t:"spend_business",ic:"building",tt:"Business spend",td:"Company expense to reimburse"},
+  {t:"loan_taken",ic:"down",tt:"I borrowed",td:"Took money from someone"},
+  {t:"loan_given",ic:"up",tt:"I lent",td:"Gave money to someone"},
+  {t:"repay_to_person",ic:"check",tt:"Pay someone back",td:"Settle what I owe"},
+  {t:"repay_from_person",ic:"coins",tt:"Someone paid me",td:"They returned money"},
+  {t:"repay_company",ic:"bank",tt:"Repay company",td:"Return petty cash I owe"},
+  {t:"reimburse_recv",ic:"refund",tt:"Reimbursement in",td:"Office paid my bills"},
+  {t:"petty_topup",ic:"banknote",tt:"Petty cash top-up",td:"Received new float"},
+  {t:"cc_spend",ic:"card",tt:"Card spend",td:"Spent on credit card"},
+  {t:"cc_payment",ic:"cardpay",tt:"Card payment",td:"Paid the credit card"},
+];
+let draft=null;
+function firstAccount(){return Object.keys(S.accounts)[0];}
+function openSheet(){draft={type:"spend_personal",amount:"",account:firstAccount(),person:"",note:"",date:today()};buildSheet();document.getElementById("overlay").classList.add("show");}
+function closeSheet(){document.getElementById("overlay").classList.remove("show");}
+
+function buildSheet(){
+  const needsAccount=!["cc_spend"].includes(draft.type);
+  const needsPerson=TXN_META[draft.type].people;
+  const dir=["loan_taken","repay_to_person"].includes(draft.type)?"oweThem":"oweMe";
+  const ppl=S.people.filter(p=>p.dir===dir);
+  if(needsPerson && !ppl.find(p=>p.id===draft.person)) draft.person=ppl[0]?.id||"";
+  document.getElementById("sheet").innerHTML=`
+    <div class="sheet-head"><div><h2>New entry</h2><div class="sub">Pick what happened — balances update automatically.</div></div>
+      <button class="xbtn" id="xBtn">${ico("close")}</button></div>
+    <div class="type-grid" id="typeGrid">
+      ${TYPES.map(x=>`<button class="tbtn ${x.t===draft.type?'sel':''}" data-type="${x.t}">
+        <span class="tic">${ico(x.ic)}</span><span><span class="tt">${x.tt}</span><span class="td">${x.td}</span></span></button>`).join("")}
+    </div>
+    <label class="fl">Amount</label>
+    <div class="money-wrap"><span class="cur">QR</span><input class="money" id="fAmount" inputmode="decimal" placeholder="0" value="${draft.amount}"></div>
+    ${needsPerson?`<label class="fl">Person</label>
+      <select id="fPerson">${ppl.map(p=>`<option value="${p.id}" ${p.id===draft.person?"selected":""}>${esc(p.name)}</option>`).join("")}
+      <option value="__new">+ Add new person…</option></select>`:""}
+    <div class="row2">
+      ${needsAccount?`<div><label class="fl">Account</label><select id="fAccount">
+        ${Object.keys(S.accounts).map(k=>`<option value="${k}" ${k===draft.account?"selected":""}>${esc(S.accounts[k].name)}</option>`).join("")}</select></div>`:"<div></div>"}
+      <div><label class="fl">Date</label><input type="date" id="fDate" value="${draft.date}"></div>
+    </div>
+    <label class="fl">Note (optional)</label>
+    <input id="fNote" placeholder="e.g. groceries, taxi, tools…" value="${esc(draft.note)}">
+    <div class="effect" id="effect">${ico("spark")}<span id="effectTxt"></span></div>
+    <div class="sheet-actions"><button class="btn ghost" id="cancelBtn">Cancel</button><button class="btn primary" id="saveBtn">Save entry</button></div>`;
+  wireSheet(); updateEffect();
+}
+function wireSheet(){
+  document.getElementById("typeGrid").querySelectorAll(".tbtn").forEach(b=>b.onclick=()=>{draft.type=b.dataset.type;syncDraft();buildSheet();});
+  document.getElementById("cancelBtn").onclick=closeSheet;
+  document.getElementById("xBtn").onclick=closeSheet;
+  document.getElementById("saveBtn").onclick=saveEntry;
+  ["fAmount","fNote","fDate"].forEach(id=>{const el=document.getElementById(id);if(el)el.oninput=()=>{syncDraft();updateEffect();};});
+  const acc=document.getElementById("fAccount");if(acc)acc.onchange=()=>{syncDraft();updateEffect();};
+  const per=document.getElementById("fPerson");if(per)per.onchange=()=>{
+    if(per.value==="__new"){addPersonInline(["loan_taken","repay_to_person"].includes(draft.type)?"oweThem":"oweMe");return;}
+    syncDraft();updateEffect();};
+}
+function syncDraft(){const g=id=>document.getElementById(id);
+  if(g("fAmount"))draft.amount=g("fAmount").value;
+  if(g("fAccount"))draft.account=g("fAccount").value;
+  if(g("fPerson"))draft.person=g("fPerson").value;
+  if(g("fNote"))draft.note=g("fNote").value;
+  if(g("fDate"))draft.date=g("fDate").value;}
+function updateEffect(){
+  const a=parseFloat(draft.amount)||0, el=document.getElementById("effectTxt");if(!el)return;
+  if(!a){el.textContent="Enter an amount to preview the effect.";return;}
+  const acctN=draft.account?S.accounts[draft.account]?.name:"";
+  const who=draft.person&&draft.person!=="__new"?(S.people.find(p=>p.id===draft.person)?.name||"someone"):"someone";
+  const map={
+    spend_personal:`<b>${acctN}</b> down ${QR(a)}. You’ll owe the company <b>${QR(a)}</b> more.`,
+    spend_business:`<b>${acctN}</b> down ${QR(a)}. Reimbursement pending up <b>${QR(a)}</b>.`,
+    petty_topup:`<b>${acctN}</b> up <b>${QR(a)}</b>.`,
+    reimburse_recv:`Reimbursement down ${QR(a)}. <b>${acctN}</b> up <b>${QR(a)}</b>.`,
+    repay_company:`<b>${acctN}</b> down ${QR(a)}. You’ll owe the company <b>${QR(a)}</b> less.`,
+    loan_taken:`<b>${acctN}</b> up ${QR(a)}. You’ll owe <b>${esc(who)}</b> ${QR(a)} more.`,
+    loan_given:`<b>${acctN}</b> down ${QR(a)}. <b>${esc(who)}</b> owes you ${QR(a)} more.`,
+    repay_to_person:`<b>${acctN}</b> down ${QR(a)}. You’ll owe <b>${esc(who)}</b> ${QR(a)} less.`,
+    repay_from_person:`<b>${acctN}</b> up ${QR(a)}. <b>${esc(who)}</b> owes you ${QR(a)} less.`,
+    cc_spend:`Credit card owed up <b>${QR(a)}</b>.`,
+    cc_payment:`<b>${acctN}</b> down ${QR(a)}. Credit card owed down <b>${QR(a)}</b>.`,
+  };
+  el.innerHTML=map[draft.type]||"";
+}
+function addPersonInline(dir){
+  const name=prompt(dir==="oweThem"?"Name of person you borrowed from:":"Name of person who borrowed:");
+  if(!name){buildSheet();return;}
+  const p={id:uid(),name:name.trim(),dir,monthly:0,openBal:0};
+  S.people.push(p);save();draft.person=p.id;buildSheet();updateEffect();
+}
+function saveEntry(){
+  syncDraft();const amt=parseFloat(draft.amount);
+  if(!amt||amt<=0){const el=document.getElementById("fAmount");el.style.borderColor="var(--clay)";el.focus();return;}
+  const m=TXN_META[draft.type];
+  const t={id:uid(),type:draft.type,amount:amt,date:draft.date||today(),note:draft.note.trim()};
+  if(!["cc_spend"].includes(draft.type))t.account=draft.account;
+  if(m.people){if(!draft.person||draft.person==="__new"){alert("Pick a person.");return;}t.person=draft.person;}
+  S.txns.push(t);save();closeSheet();render();
+}
+
+/* ---------- Quick pay ---------- */
+function quickPay(pid){
+  const p=S.people.find(x=>x.id===pid);if(!p)return;
+  const c=compute(),bal=c.pbal[pid];
+  const suggest=p.monthly&&p.monthly<=bal?p.monthly:bal;
+  const v=prompt(`${p.dir==="oweThem"?"Amount you paid "+p.name:p.name+" paid you"} (QR):`,Math.round(suggest));
+  if(v===null)return;const amt=parseFloat(v);if(!amt||amt<=0)return;
+  const type=p.dir==="oweThem"?"repay_to_person":"repay_from_person";
+  S.txns.push({id:uid(),type,amount:amt,date:today(),account:firstAccount(),person:pid,note:"quick"});
+  save();render();
+}
+
+/* ---------- Backup ---------- */
+function exportData(){
+  const blob=new Blob([JSON.stringify(S,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob),a=document.createElement("a");
+  a.href=url;a.download=`custody-ledger-${today()}.json`;a.click();URL.revokeObjectURL(url);
+}
+function importData(file){const r=new FileReader();
+  r.onload=()=>{try{S=JSON.parse(r.result);save();render();alert("Restored ✓");}catch(e){alert("That file couldn’t be read.");}};
+  r.readAsText(file);}
+
+/* ---------- Wire ---------- */
+document.getElementById("fab").onclick=openSheet;
+document.getElementById("overlay").onclick=e=>{if(e.target.id==="overlay")closeSheet();};
+document.getElementById("filters").onclick=e=>{const b=e.target.closest(".chip");if(!b)return;
+  filter=b.dataset.f;document.querySelectorAll("#filters .chip").forEach(x=>x.classList.toggle("on",x===b));renderTxns();};
+document.body.addEventListener("click",e=>{
+  const pay=e.target.closest("[data-pay]");if(pay){quickPay(pay.dataset.pay);return;}
+  const del=e.target.closest("[data-del]");if(del){if(confirm("Delete this entry?")){S.txns=S.txns.filter(t=>t.id!==del.dataset.del);save();render();}return;}
+  const addp=e.target.closest(".add-person");if(addp){addPersonMain(addp.dataset.dir);return;}
+});
+function addPersonMain(dir){
+  const name=prompt(dir==="oweThem"?"Name of person you borrowed from:":"Name of person who borrowed:");if(!name)return;
+  const bal=prompt("Current outstanding amount (QR), or 0 if none:","0");
+  S.people.push({id:uid(),name:name.trim(),dir,monthly:0,openBal:parseFloat(bal)||0});save();render();}
+document.getElementById("btnExport").onclick=exportData;
+document.getElementById("btnImport").onclick=()=>document.getElementById("fileIn").click();
+document.getElementById("fileIn").onchange=e=>{if(e.target.files[0])importData(e.target.files[0]);};
+document.getElementById("btnReset").onclick=()=>{if(confirm("Reset everything back to your opening snapshot? This clears all entries you’ve added.")){S=seed();save();render();}};
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeSheet();});
+render();
+</script>
+</body>
+</html>
