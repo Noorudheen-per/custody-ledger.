@@ -475,12 +475,12 @@ function seed(){
   const p=(name,dir,bal,monthly=0)=>({id:uid(),name,dir,monthly,openBal:bal});
   return {
     custodian:"Nooru",
-    accounts:{debit:{name:"Debit Card",open:2637}, wallet:{name:"Cash Wallet",open:180}},
-    creditCard:{owedOpen:7591,limit:8300},
-    company:{owePettyOpen:8957, reimburseOpen:7946},
+    accounts:{debit:{name:"Debit Card",open:657.69}, wallet:{name:"Cash Wallet",open:2}},
+    creditCard:{owedOpen:211.34,limit:8300},
+    company:{owePettyOpen:10500, reimburseOpen:14435, toSubmitOpen:2877},
     people:[
       p("Minhaj","oweThem",1612),p("Nizar","oweThem",2200),p("Ali","oweThem",17),
-      p("Rashid","oweThem",4250),p("Mubashir K","oweThem",1120),
+      p("Rashid","oweThem",4250),p("Mubashir","oweThem",2520),p("Ashik","oweThem",200),
       p("Umar","oweMe",100),p("Nuss","oweMe",2959,450),p("Jaseem","oweMe",300),
       p("Rona","oweMe",50),p("Lulu","oweMe",1200)
     ],
@@ -525,11 +525,12 @@ function setSync(state){
 /* ---------- Ledger engine ---------- */
 function compute(){
   const acc={}; for(const k in S.accounts) acc[k]=S.accounts[k].open;
-  let ccOwed=S.creditCard.owedOpen, oweParty=S.company.owePettyOpen, reimburse=S.company.reimburseOpen;
+  let ccOwed=S.creditCard.owedOpen, oweParty=S.company.owePettyOpen, reimburse=S.company.reimburseOpen, toSubmit=S.company.toSubmitOpen||0;
   const pbal={}; S.people.forEach(p=>pbal[p.id]=p.openBal);
   for(const t of S.txns){ const a=t.amount; switch(t.type){
     case "spend_personal": acc[t.account]-=a; oweParty+=a; break;
-    case "spend_business": acc[t.account]-=a; reimburse+=a; break;
+    case "spend_business": acc[t.account]-=a; toSubmit+=a; break;
+    case "submit_bills":   toSubmit-=a; reimburse+=a; break;
     case "petty_topup":    acc[t.account]+=a; break;
     case "reimburse_recv": reimburse-=a; acc[t.account]+=a; break;
     case "repay_company":  acc[t.account]-=a; oweParty-=a; break;
@@ -543,8 +544,8 @@ function compute(){
   const cashOnHand=Object.values(acc).reduce((s,v)=>s+v,0);
   let oweThem=0,oweMe=0;
   S.people.forEach(p=>{const b=pbal[p.id];if(p.dir==="oweThem")oweThem+=Math.max(b,0);else oweMe+=Math.max(b,0);});
-  const due=reimburse+oweMe+cashOnHand, owe=oweParty+oweThem+ccOwed;
-  return {acc,ccOwed,oweParty,reimburse,pbal,cashOnHand,oweThem,oweMe,due,owe,net:due-owe};
+  const due=reimburse+toSubmit+oweMe+cashOnHand, owe=oweParty+oweThem+ccOwed;
+  return {acc,ccOwed,oweParty,reimburse,toSubmit,pbal,cashOnHand,oweThem,oweMe,due,owe,net:due-owe};
 }
 
 /* ---------- Render ---------- */
@@ -571,8 +572,9 @@ function render(){
 
   const cards=[
     {cls:"hold",ic:"wallet",cap:"Cash on hand",amt:QR(c.cashOnHand),sub:"Company money you hold"},
-    {cls:"neg", ic:"bank",  cap:"Owe company", amt:QR(c.oweParty),  sub:"Petty cash spent personally"},
-    {cls:"pos", ic:"refund",cap:"Reimbursement",amt:QR(c.reimburse),sub:"Bills submitted to office"},
+    {cls:"neg", ic:"bank",  cap:"Owe company", amt:QR(c.oweParty),  sub:"Company petty (QR 10,500 float)"},
+    {cls:"pos", ic:"refund",cap:"Reimbursement",amt:QR(c.reimburse),sub:"Submitted · awaiting office"},
+    {cls:"warn",ic:"receipt",cap:"Bills to submit",amt:QR(c.toSubmit),sub:"In hand · not yet submitted"},
     {cls:"neg", ic:"up",    cap:"I owe people", amt:QR(c.oweThem),  sub:"Borrowed from friends"},
     {cls:"pos", ic:"down",  cap:"People owe me",amt:QR(c.oweMe),    sub:"Lent out"},
     {cls:"warn",ic:"card",  cap:"Credit card",  amt:QR(c.ccOwed),   sub:"Outstanding to repay"},
@@ -626,6 +628,7 @@ function render(){
 const TXN_META={
   spend_personal:{icon:"receipt",bg:"var(--clay-bg)",fg:"var(--clay)",dir:"out",label:"Personal spend"},
   spend_business:{icon:"building",bg:"var(--brass-bg)",fg:"var(--brass)",dir:"out",label:"Business spend"},
+  submit_bills:{icon:"bank",bg:"var(--emerald-bg)",fg:"var(--emerald)",dir:"in",transfer:true,label:"Bills submitted"},
   petty_topup:{icon:"banknote",bg:"var(--emerald-bg)",fg:"var(--emerald)",dir:"in",label:"Petty cash top-up"},
   reimburse_recv:{icon:"refund",bg:"var(--emerald-bg)",fg:"var(--emerald)",dir:"in",label:"Reimbursement received"},
   repay_company:{icon:"bank",bg:"var(--clay-bg)",fg:"var(--clay)",dir:"out",label:"Repaid company"},
@@ -640,15 +643,15 @@ let filter="all";
 function renderTxns(){
   const list=[...S.txns].sort((a,b)=>(b.date+b.id).localeCompare(a.date+a.id));
   const f=list.filter(t=>{const m=TXN_META[t.type];
-    if(filter==="all")return true; if(filter==="in")return m.dir==="in";
-    if(filter==="out")return m.dir==="out"; if(filter==="people")return m.people;});
+    if(filter==="all")return true; if(filter==="in")return m.dir==="in"&&!m.transfer;
+    if(filter==="out")return m.dir==="out"&&!m.transfer; if(filter==="people")return m.people;});
   if(!f.length){document.getElementById("txnList").innerHTML=empty("No entries yet. Tap “New entry” to begin.");return;}
   document.getElementById("txnList").innerHTML=f.map(t=>{
     const m=TXN_META[t.type];
     const who=t.person?(S.people.find(p=>p.id===t.person)?.name||""):"";
     const acctN=t.account?S.accounts[t.account]?.name:"";
     const bits=[acctN,t.note].filter(Boolean).join(" · ");
-    const sgn=m.dir==="in"?"plus":"minus", pfx=m.dir==="in"?"+":"−";
+    const sgn=m.transfer?"":(m.dir==="in"?"plus":"minus"), pfx=m.transfer?"":(m.dir==="in"?"+":"−");
     return `<div class="txn">
       <div class="ic" style="background:${m.bg};color:${m.fg}">${ico(m.icon)}</div>
       <div class="d"><b>${m.label}${who?": "+esc(who):""}</b><small>${esc(bits)||"—"} · ${t.date}</small></div>
@@ -661,6 +664,7 @@ function renderTxns(){
 const TYPES=[
   {t:"spend_personal",ic:"receipt",tt:"Personal spend",td:"Company money for myself"},
   {t:"spend_business",ic:"building",tt:"Business spend",td:"Company expense to reimburse"},
+  {t:"submit_bills",ic:"bank",tt:"Submit bills",td:"Move in-hand bills to the office"},
   {t:"loan_taken",ic:"down",tt:"I borrowed",td:"Took money from someone"},
   {t:"loan_given",ic:"up",tt:"I lent",td:"Gave money to someone"},
   {t:"repay_to_person",ic:"check",tt:"Pay someone back",td:"Settle what I owe"},
@@ -677,7 +681,7 @@ function openSheet(){draft={type:"spend_personal",amount:"",account:firstAccount
 function closeSheet(){document.getElementById("overlay").classList.remove("show");}
 
 function buildSheet(){
-  const needsAccount=!["cc_spend"].includes(draft.type);
+  const needsAccount=!["cc_spend","submit_bills"].includes(draft.type);
   const needsPerson=TXN_META[draft.type].people;
   const dir=["loan_taken","repay_to_person"].includes(draft.type)?"oweThem":"oweMe";
   const ppl=S.people.filter(p=>p.dir===dir);
@@ -729,7 +733,8 @@ function updateEffect(){
   const who=draft.person&&draft.person!=="__new"?(S.people.find(p=>p.id===draft.person)?.name||"someone"):"someone";
   const map={
     spend_personal:`<b>${acctN}</b> down ${QR(a)}. You’ll owe the company <b>${QR(a)}</b> more.`,
-    spend_business:`<b>${acctN}</b> down ${QR(a)}. Reimbursement pending up <b>${QR(a)}</b>.`,
+    spend_business:`<b>${acctN}</b> down ${QR(a)}. Bills to submit up <b>${QR(a)}</b>.`,
+    submit_bills:`Bills to submit down ${QR(a)}. Reimbursement (submitted) up <b>${QR(a)}</b>.`,
     petty_topup:`<b>${acctN}</b> up <b>${QR(a)}</b>.`,
     reimburse_recv:`Reimbursement down ${QR(a)}. <b>${acctN}</b> up <b>${QR(a)}</b>.`,
     repay_company:`<b>${acctN}</b> down ${QR(a)}. You’ll owe the company <b>${QR(a)}</b> less.`,
@@ -753,7 +758,7 @@ function saveEntry(){
   if(!amt||amt<=0){const el=document.getElementById("fAmount");el.style.borderColor="var(--clay)";el.focus();return;}
   const m=TXN_META[draft.type];
   const t={id:uid(),type:draft.type,amount:amt,date:draft.date||today(),note:draft.note.trim()};
-  if(!["cc_spend"].includes(draft.type))t.account=draft.account;
+  if(!["cc_spend","submit_bills"].includes(draft.type))t.account=draft.account;
   if(m.people){if(!draft.person||draft.person==="__new"){alert("Pick a person.");return;}t.person=draft.person;}
   S.txns.push(t);save();closeSheet();render();
 }
