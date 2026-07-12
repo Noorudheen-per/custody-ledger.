@@ -2,9 +2,20 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#14161c">
+<meta name="description" content="Custody Ledger — a petty-cash and personal-loan tracker in Qatari Riyal. Works beautifully on iPhone and desktop, and installs to your home screen.">
 <title>Custody Ledger · Petty Cash</title>
+
+<!-- Home-screen / PWA (iPhone + Android + desktop) -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Custody Ledger">
+<meta name="application-name" content="Custody Ledger">
+<meta name="format-detection" content="telephone=no">
+<!-- Favicon, Apple touch icon and web-app manifest are generated at runtime from the brand seal -->
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500;1,9..144,600&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -20,9 +31,9 @@
   --shadow-sm:0 1px 2px rgba(20,24,33,.06);
   --r:15px;
 }
-*{box-sizing:border-box;margin:0;padding:0}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html{-webkit-text-size-adjust:100%}
-body{font-family:'Inter',system-ui,sans-serif;background:linear-gradient(178deg,#f2f4f0 0%,#e7ebe5 46%,#e2e7df 100%);background-attachment:fixed;color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased;padding-bottom:104px}
+body{font-family:'Inter',system-ui,sans-serif;background:linear-gradient(178deg,#f2f4f0 0%,#e7ebe5 46%,#e2e7df 100%);background-attachment:fixed;color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased;padding-bottom:calc(104px + env(safe-area-inset-bottom))}
 .num{font-family:'IBM Plex Mono',ui-monospace,monospace;font-feature-settings:"tnum" 1;letter-spacing:-.02em}
 h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;letter-spacing:-.01em;line-height:1.08}
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
@@ -31,13 +42,15 @@ svg{display:block}
 .ico{width:1em;height:1em;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 
 /* ---------- Masthead ---------- */
-.top{background:var(--ink);color:#fff;padding:20px 20px 30px;position:relative;overflow:hidden}
+.top{background:var(--ink);color:#fff;padding:calc(20px + env(safe-area-inset-top)) max(20px,env(safe-area-inset-right)) 30px max(20px,env(safe-area-inset-left));position:relative;overflow:hidden}
 .top::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 47px,rgba(255,255,255,.028) 47px 48px);pointer-events:none}
 .top::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,transparent,var(--brass),transparent);opacity:.7}
 .top-inner{max-width:1080px;margin:0 auto;position:relative;z-index:1;display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
 .brand-block{display:flex;align-items:center;gap:14px}
 .seal{width:44px;height:44px;border-radius:50%;border:1.5px solid var(--brass);display:grid;place-items:center;flex-shrink:0;background:radial-gradient(circle at 30% 30%,rgba(201,162,74,.18),transparent)}
 .seal span{font-family:'Fraunces',serif;font-weight:600;font-style:italic;color:var(--brass-2);font-size:22px}
+.seal-mark{width:23px;height:23px;fill:none;stroke:var(--brass-2);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.login-card .seal-mark{width:27px;height:27px}
 .mark{font-family:'Fraunces',serif;font-weight:600;font-size:25px;color:#fff;line-height:1}
 .mark em{font-style:italic;color:var(--brass-2)}
 .brand-sub{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#8e95a2;margin-top:5px}
@@ -169,7 +182,7 @@ svg{display:block}
 .foot{max-width:1080px;margin:28px auto 0;padding:16px 20px 0;font-size:11.5px;color:var(--ink-faint);border-top:1px solid var(--line);text-align:center}
 
 /* ---------- FAB ---------- */
-.fab{position:fixed;right:20px;bottom:20px;z-index:40;background:var(--ink);color:#fff;border-radius:16px;padding:15px 22px;font-weight:600;font-size:15px;box-shadow:0 12px 30px rgba(20,24,33,.32);display:flex;align-items:center;gap:9px;transition:.15s}
+.fab{position:fixed;right:calc(20px + env(safe-area-inset-right));bottom:calc(20px + env(safe-area-inset-bottom));z-index:40;background:var(--ink);color:#fff;border-radius:16px;padding:15px 22px;font-weight:600;font-size:15px;box-shadow:0 12px 30px rgba(20,24,33,.32);display:flex;align-items:center;gap:9px;transition:.15s}
 .fab:hover{background:#000;transform:translateY(-2px)}
 .fab .ico{width:18px;height:18px;stroke-width:2}
 
@@ -192,7 +205,7 @@ svg{display:block}
 .tbtn.sel{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
 .tbtn.sel .tic{background:var(--ink);color:#fff}
 label.fl{display:block;font-size:12px;font-weight:600;color:var(--ink-soft);margin:15px 0 6px;letter-spacing:.02em}
-input,select,textarea{width:100%;font-family:inherit;font-size:15px;padding:12px 13px;border:1.5px solid var(--line-strong);border-radius:11px;background:var(--card);color:var(--ink)}
+input,select,textarea{width:100%;font-family:inherit;font-size:16px;padding:12px 13px;border:1.5px solid var(--line-strong);border-radius:11px;background:var(--card);color:var(--ink)}
 input.money{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:22px;letter-spacing:-.02em}
 .money-wrap{position:relative}
 .money-wrap .cur{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:15px;color:var(--ink-faint);pointer-events:none}
@@ -216,9 +229,23 @@ textarea{resize:vertical;min-height:44px}
   .type-grid{grid-template-columns:1fr}
   .beam-net .val{font-size:27px}
   .overlay{align-items:flex-end}
-  .sheet{border-radius:20px 20px 0 0;max-height:94vh}
+  .sheet{border-radius:20px 20px 0 0;max-height:94vh;padding-bottom:calc(28px + env(safe-area-inset-bottom))}
+  /* comfortable touch targets */
+  .prow .pay{padding:9px 13px}
+  .chip{padding:9px 15px}
+  .tool{padding:10px 13px}
+  .add-person{padding:13px}
+  .txn{padding:14px 16px}
+  .prow{padding:13px 16px}
 }
-@media(max-width:440px){ .cards{grid-template-columns:1fr} .accts{grid-template-columns:1fr} }
+@media(max-width:440px){
+  .cards{grid-template-columns:1fr} .accts{grid-template-columns:1fr}
+  .txn-head{gap:10px}
+  .toolbar{width:100%}
+  .toolbar .tool{flex:1;justify-content:center}
+}
+/* Touch devices have no hover — keep the delete affordance reachable */
+@media(hover:none){ .txn .del{opacity:.55} .card:hover{transform:none} }
 @media(prefers-reduced-motion:reduce){ *{animation:none!important;transition:none!important} }
 
 /* ---------- Auth ---------- */
@@ -242,6 +269,34 @@ textarea{resize:vertical;min-height:44px}
 .acct-chip .sdot.saving{background:var(--brass)} .acct-chip .sdot.off{background:var(--clay)}
 .acct-chip button{color:var(--ink-faint);font-weight:600;border-left:1px solid var(--line);padding-left:8px;margin-left:2px}
 .acct-chip button:hover{color:var(--clay)}
+
+/* ---------- App lock (passcode / Face ID) ---------- */
+#lockScreen{position:fixed;inset:0;z-index:200;background:linear-gradient(178deg,#f2f4f0,#e2e7df);display:none;align-items:center;justify-content:center;padding:calc(24px + env(safe-area-inset-top)) 24px calc(24px + env(safe-area-inset-bottom))}
+#lockScreen.show{display:flex}
+.lock-card{width:100%;max-width:340px;text-align:center}
+.lock-card .seal{width:56px;height:56px;margin:0 auto 15px}
+.lock-card .seal-mark{width:29px;height:29px}
+.lock-card h1{font-size:23px;margin-bottom:4px}
+.lock-card h1 em{font-style:italic;color:var(--brass)}
+.lock-card .sub{font-size:13px;color:var(--ink-faint);margin-bottom:22px;word-break:break-word}
+.dots{display:flex;justify-content:center;gap:16px;margin-bottom:6px;height:16px}
+.dots i{width:13px;height:13px;border-radius:50%;border:1.6px solid var(--ink-soft);transition:.15s}
+.dots i.on{background:var(--ink);border-color:var(--ink)}
+.dots.err i{border-color:var(--clay)}
+.dots.err{animation:shake .34s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+.lock-msg{font-size:12.5px;min-height:18px;margin:6px 0 12px;color:var(--ink-faint)}
+.lock-msg.err{color:var(--clay)}
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:270px;margin:0 auto}
+.key{height:60px;border-radius:16px;background:var(--card);border:1px solid var(--line);font-family:'IBM Plex Mono',monospace;font-size:23px;font-weight:600;color:var(--ink);box-shadow:var(--shadow-sm);transition:transform .08s,background .12s;display:grid;place-items:center;-webkit-user-select:none;user-select:none}
+.key:active{background:var(--paper);transform:scale(.95)}
+.key.fn{background:transparent;box-shadow:none;border:none;color:var(--ink-soft)}
+.key.fn .ico{width:24px;height:24px}
+.key.face{color:var(--emerald)}
+.key.blank{visibility:hidden}
+.lock-foot{margin-top:24px;font-size:13px;color:var(--ink-faint)}
+.lock-foot button{color:var(--ink-soft);font-weight:600;text-decoration:underline;text-underline-offset:2px}
+.lock-foot button:hover{color:var(--clay)}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -249,7 +304,7 @@ textarea{resize:vertical;min-height:44px}
 
 <div id="loginScreen">
   <div class="login-card">
-    <div class="seal"><span>N</span></div>
+    <div class="seal"><svg class="seal-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M2 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg></div>
     <h1>Custody&nbsp;<em>Ledger</em></h1>
     <div class="sub">Sign in to reach your ledger on any device.</div>
     <label for="loginEmail">Email address</label>
@@ -259,10 +314,12 @@ textarea{resize:vertical;min-height:44px}
   </div>
 </div>
 
+<div id="lockScreen"></div>
+
 <header class="top">
   <div class="top-inner">
     <div class="brand-block">
-      <div class="seal"><span>N</span></div>
+      <div class="seal"><svg class="seal-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M2 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg></div>
       <div>
         <div class="mark">Custody&nbsp;<em>Ledger</em></div>
         <div class="brand-sub">Petty Cash · Qatari Riyal</div>
@@ -354,6 +411,54 @@ const today = () => new Date().toISOString().slice(0,10);
 const longDate = () => new Date().toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"});
 const KEY = "custody_ledger_v1";
 
+/* ---------- Brand icons: favicon, Apple home-screen icon & PWA manifest ---------- */
+(function installIcons(){
+  const BRASS="#c9a24a", INK="#14161c";
+  const GLYPH=["M16 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z",
+               "M2 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z",
+               "M7 21h10","M12 3v18","M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"];
+  function addLink(rel,href,type){const l=document.createElement("link");l.rel=rel;l.href=href;if(type)l.type=type;document.head.appendChild(l);}
+  // Crisp vector favicon for browser tabs
+  const svg="<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'>"
+    +"<rect width='64' height='64' rx='14' fill='"+INK+"'/>"
+    +"<circle cx='32' cy='32' r='23' fill='none' stroke='"+BRASS+"' stroke-width='2'/>"
+    +"<g fill='none' stroke='"+BRASS+"' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round' transform='translate(16.6,16.6) scale(1.28)'>"
+    +GLYPH.map(d=>"<path d='"+d+"'/>").join("")+"</g></svg>";
+  addLink("icon","data:image/svg+xml,"+encodeURIComponent(svg),"image/svg+xml");
+  // Raster icons (Apple home-screen requires PNG; also used for the PWA manifest)
+  try{
+    const png=size=>{
+      const c=document.createElement("canvas");c.width=c.height=size;
+      const x=c.getContext("2d");
+      const r=size*0.22;
+      x.fillStyle=INK;x.beginPath();
+      if(x.roundRect)x.roundRect(0,0,size,size,r);else x.rect(0,0,size,size);
+      x.fill();
+      const g=x.createRadialGradient(size*.3,size*.28,0,size*.3,size*.28,size*.75);
+      g.addColorStop(0,"rgba(201,162,74,.22)");g.addColorStop(1,"rgba(201,162,74,0)");
+      x.fillStyle=g;x.fillRect(0,0,size,size);
+      x.strokeStyle=BRASS;x.lineCap="round";x.lineJoin="round";
+      x.lineWidth=size*.028;
+      x.beginPath();x.arc(size/2,size/2,size*.36,0,Math.PI*2);x.stroke();
+      const gs=size*.62/24;
+      x.save();x.translate(size/2-12*gs,size/2-12*gs);x.scale(gs,gs);
+      x.lineWidth=1.9;
+      GLYPH.forEach(d=>x.stroke(new Path2D(d)));
+      x.restore();
+      return c.toDataURL("image/png");
+    };
+    const p180=png(180),p192=png(192),p512=png(512);
+    addLink("apple-touch-icon",p180);
+    const manifest={name:"Custody Ledger",short_name:"Ledger",
+      description:"Petty-cash & personal-loan tracker in Qatari Riyal.",
+      display:"standalone",orientation:"portrait",background_color:INK,theme_color:INK,start_url:".",scope:".",
+      icons:[{src:p192,sizes:"192x192",type:"image/png",purpose:"any"},
+             {src:p512,sizes:"512x512",type:"image/png",purpose:"any maskable"}]};
+    const url=URL.createObjectURL(new Blob([JSON.stringify(manifest)],{type:"application/manifest+json"}));
+    addLink("manifest",url);
+  }catch(e){/* canvas unavailable — vector favicon still applies */}
+})();
+
 /* ---------- Icons ---------- */
 const P = {
   receipt:'<path d="M6 3h12v18l-2.5-1.5L13 21l-2.5-1.5L8 21l-2-1.5V3z"/><path d="M9 8h6M9 12h6M9 15.5h3"/>',
@@ -371,7 +476,10 @@ const P = {
   trash:'<path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13"/>',
   spark:'<path d="M12 3v3M12 18v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M3 12h3M18 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>',
   close:'<path d="M6 6l12 12M18 6L6 18"/>',
+  face:'<path d="M4 8V6a2 2 0 0 1 2-2h2"/><path d="M16 4h2a2 2 0 0 1 2 2v2"/><path d="M20 16v2a2 2 0 0 1-2 2h-2"/><path d="M8 20H6a2 2 0 0 1-2-2v-2"/><path d="M9 10h.01M15 10h.01"/><path d="M9 14s1 1.5 3 1.5 3-1.5 3-1.5"/>',
+  bksp:'<path d="M20 6H9l-5 6 5 6h11a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1Z"/><path d="M16 9l-4 6M12 9l4 6"/>',
 };
+const SEAL_PATHS='<path d="M16 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M2 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/>';
 const ico = (k,cls="ico") => `<svg class="${cls}" viewBox="0 0 24 24">${P[k]||""}</svg>`;
 
 /* ---------- Opening data ---------- */
@@ -702,6 +810,106 @@ document.getElementById("fileIn").onchange=e=>{if(e.target.files[0])importData(e
 document.getElementById("btnReset").onclick=()=>{if(confirm("Reset everything back to your opening snapshot? This clears all entries you’ve added.")){S=seed();save();render();}};
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeSheet();});
 
+/* ---------- App lock: passcode + Face ID (device-local) ---------- */
+const LOCK_KEY="custody_lock_v1", PIN_LEN=4;
+const loadLock=()=>{try{return JSON.parse(localStorage.getItem(LOCK_KEY))||null;}catch(e){return null;}};
+const saveLock=v=>{try{localStorage.setItem(LOCK_KEY,JSON.stringify(v));}catch(e){}};
+const clearLock=()=>{try{localStorage.removeItem(LOCK_KEY);}catch(e){}};
+const randSalt=()=>{try{return [...crypto.getRandomValues(new Uint8Array(12))].map(x=>x.toString(16).padStart(2,"0")).join("");}
+  catch(e){return Math.random().toString(36).slice(2)+Date.now().toString(36);}};
+async function sha(s){
+  if(crypto&&crypto.subtle){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s));
+    return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("");}
+  let h=0;for(let i=0;i<s.length;i++)h=(Math.imul(31,h)+s.charCodeAt(i))|0;return "f"+(h>>>0).toString(16);
+}
+/* WebAuthn (Face ID / Touch ID) — device biometric, no server needed */
+const bufToB64=buf=>btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+const b64ToBuf=s=>{s=s.replace(/-/g,"+").replace(/_/g,"/");const bin=atob(s);const u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return u.buffer;};
+const bioSupported=()=>!!(window.isSecureContext&&window.PublicKeyCredential);
+async function bioAvailable(){if(!bioSupported())return false;try{return await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();}catch(e){return false;}}
+async function bioRegister(){
+  const cred=await navigator.credentials.create({publicKey:{
+    challenge:crypto.getRandomValues(new Uint8Array(32)),
+    rp:{name:"Custody Ledger",id:location.hostname},
+    user:{id:crypto.getRandomValues(new Uint8Array(16)),name:(USER&&USER.email)||"custody",displayName:(USER&&USER.email)||"Custody Ledger"},
+    pubKeyCredParams:[{type:"public-key",alg:-7},{type:"public-key",alg:-257}],
+    authenticatorSelection:{authenticatorAttachment:"platform",userVerification:"required"},
+    timeout:60000,attestation:"none"}});
+  return bufToB64(cred.rawId);
+}
+async function bioVerify(id){
+  await navigator.credentials.get({publicKey:{
+    challenge:crypto.getRandomValues(new Uint8Array(32)),
+    rpId:location.hostname,allowCredentials:[{type:"public-key",id:b64ToBuf(id)}],
+    userVerification:"required",timeout:60000}});
+  return true;
+}
+let lockMode="unlock", pinBuf="", pinFirst="";
+function showLockScreen(setup){lockMode=setup?"setup":"unlock";pinBuf="";pinFirst="";renderLock();
+  document.getElementById("lockScreen").classList.add("show");if(!setup)maybeAutoBio();}
+function hideLockScreen(){document.getElementById("lockScreen").classList.remove("show");pinBuf="";pinFirst="";}
+function renderLock(){
+  const lock=loadLock(), hasBio=!!(lock&&lock.cred);
+  const sub = lockMode==="setup"
+    ? (pinFirst?"Confirm your passcode":"Create a 4-digit passcode")
+    : ((USER&&USER.email)?USER.email:"Enter your passcode to unlock");
+  document.getElementById("lockScreen").innerHTML=`<div class="lock-card">
+    <div class="seal"><svg class="seal-mark" viewBox="0 0 24 24" aria-hidden="true">${SEAL_PATHS}</svg></div>
+    <h1>Custody&nbsp;<em>Ledger</em></h1>
+    <div class="sub" id="lockSub">${esc(sub)}</div>
+    <div class="dots" id="lockDots">${Array.from({length:PIN_LEN}).map((_,i)=>`<i class="${i<pinBuf.length?'on':''}"></i>`).join("")}</div>
+    <div class="lock-msg" id="lockMsg"></div>
+    <div class="keypad">
+      ${[1,2,3,4,5,6,7,8,9].map(n=>`<button class="key" data-k="${n}">${n}</button>`).join("")}
+      ${lockMode==="unlock"&&hasBio?`<button class="key fn face" data-k="bio" aria-label="Face ID">${ico("face")}</button>`:`<button class="key blank"></button>`}
+      <button class="key" data-k="0">0</button>
+      <button class="key fn" data-k="del" aria-label="Delete">${ico("bksp")}</button>
+    </div>
+    <div class="lock-foot">${lockMode==="setup"?"":"Not you? "}<button id="lockSignOut">${lockMode==="setup"?"Use a different account":"Sign out"}</button></div>
+  </div>`;
+}
+function updateDots(){const d=document.getElementById("lockDots");if(!d)return;d.classList.remove("err");
+  [...d.children].forEach((c,i)=>c.classList.toggle("on",i<pinBuf.length));}
+function lockError(msg){const d=document.getElementById("lockDots"),m=document.getElementById("lockMsg");
+  if(d)d.classList.add("err");if(m){m.className="lock-msg err";m.textContent=msg;}
+  pinBuf="";setTimeout(()=>{updateDots();if(m){m.textContent="";m.className="lock-msg";}},700);}
+function pinKey(k){
+  if(k==="bio"){tryBio();return;}
+  if(k==="del"){pinBuf=pinBuf.slice(0,-1);updateDots();return;}
+  if(pinBuf.length>=PIN_LEN)return;
+  pinBuf+=k;updateDots();
+  if(pinBuf.length===PIN_LEN)setTimeout(submitPin,110);
+}
+async function submitPin(){
+  if(lockMode==="setup"){
+    if(!pinFirst){pinFirst=pinBuf;pinBuf="";renderLock();return;}
+    if(pinBuf!==pinFirst){pinFirst="";renderLock();lockError("Passcodes didn't match.");return;}
+    const salt=randSalt(), hash=await sha(salt+":"+pinBuf);
+    let cred=null;
+    if(await bioAvailable()&&confirm("Enable Face ID / Touch ID to unlock next time?")){
+      try{cred=await bioRegister();}catch(e){cred=null;}
+    }
+    saveLock({salt,hash,cred,email:(USER&&USER.email)||""});
+    hideLockScreen();return;
+  }
+  const lock=loadLock();if(!lock){hideLockScreen();return;}
+  const hash=await sha(lock.salt+":"+pinBuf);
+  if(hash===lock.hash)hideLockScreen();else lockError("Wrong passcode.");
+}
+async function tryBio(){const lock=loadLock();if(!lock||!lock.cred)return;
+  try{await bioVerify(lock.cred);hideLockScreen();}catch(e){}}
+async function maybeAutoBio(){const lock=loadLock();if(lock&&lock.cred&&await bioAvailable())setTimeout(tryBio,300);}
+async function lockSignOut(){clearLock();try{await SB.auth.signOut();}catch(e){}location.reload();}
+document.getElementById("lockScreen").addEventListener("click",e=>{
+  if(e.target.closest("#lockSignOut")){lockSignOut();return;}
+  const b=e.target.closest("[data-k]");if(b)pinKey(b.dataset.k);
+});
+document.addEventListener("keydown",e=>{
+  if(!document.getElementById("lockScreen").classList.contains("show"))return;
+  if(/^[0-9]$/.test(e.key))pinKey(e.key);
+  else if(e.key==="Backspace")pinKey("del");
+});
+
 /* ---------- Auth boot ---------- */
 function showLogin(){document.getElementById("loginScreen").classList.add("show");}
 function hideLogin(){document.getElementById("loginScreen").classList.remove("show");}
@@ -716,9 +924,12 @@ async function loadState(){
 }
 async function onSignedIn(session){
   USER=session.user;
+  const lock=loadLock();
+  if(lock&&lock.hash)showLockScreen(false);   // cover the ledger until unlocked
   hideLogin();
   await loadState();
   ready=true; setSync("ok"); render();
+  if(!(lock&&lock.hash))showLockScreen(true);  // first time ever: set a passcode
 }
 async function boot(){
   SB=supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
@@ -742,7 +953,7 @@ document.getElementById("loginBtn").onclick=async ()=>{
   else{msg.className="login-msg ok";msg.textContent="Check your email for the sign-in link.";}
 };
 document.getElementById("loginEmail").addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("loginBtn").click();});
-document.getElementById("signOutBtn").onclick=async ()=>{try{await SB.auth.signOut();}catch(e){} location.reload();};
+document.getElementById("signOutBtn").onclick=async ()=>{clearLock();try{await SB.auth.signOut();}catch(e){} location.reload();};
 
 boot();
 </script>
