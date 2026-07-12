@@ -220,9 +220,44 @@ textarea{resize:vertical;min-height:44px}
 }
 @media(max-width:440px){ .cards{grid-template-columns:1fr} .accts{grid-template-columns:1fr} }
 @media(prefers-reduced-motion:reduce){ *{animation:none!important;transition:none!important} }
+
+/* ---------- Auth ---------- */
+#loginScreen{position:fixed;inset:0;z-index:100;background:linear-gradient(178deg,#f2f4f0,#e2e7df);display:none;align-items:center;justify-content:center;padding:24px}
+#loginScreen.show{display:flex}
+.login-card{background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);width:100%;max-width:380px;padding:30px 28px;text-align:center}
+.login-card .seal{width:52px;height:52px;margin:0 auto 16px}
+.login-card .seal span{font-size:26px}
+.login-card h1{font-size:24px;margin-bottom:4px}
+.login-card h1 em{font-style:italic;color:var(--brass)}
+.login-card .sub{font-size:13px;color:var(--ink-faint);margin-bottom:22px}
+.login-card label{display:block;text-align:left;font-size:12px;font-weight:600;color:var(--ink-soft);margin-bottom:6px}
+.login-card input{margin-bottom:14px}
+.login-card .btn{width:100%;background:var(--ink);color:#fff}
+.login-card .btn:hover{background:#000}
+.login-card .btn:disabled{opacity:.5;cursor:default}
+.login-msg{font-size:13px;margin-top:14px;min-height:18px}
+.login-msg.ok{color:var(--emerald)} .login-msg.err{color:var(--clay)}
+.acct-chip{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--ink-soft);padding:8px 12px;border:1px solid var(--line);border-radius:9px;background:var(--card)}
+.acct-chip .sdot{width:8px;height:8px;border-radius:50%;background:var(--emerald);flex-shrink:0}
+.acct-chip .sdot.saving{background:var(--brass)} .acct-chip .sdot.off{background:var(--clay)}
+.acct-chip button{color:var(--ink-faint);font-weight:600;border-left:1px solid var(--line);padding-left:8px;margin-left:2px}
+.acct-chip button:hover{color:var(--clay)}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
+
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="seal"><span>N</span></div>
+    <h1>Custody&nbsp;<em>Ledger</em></h1>
+    <div class="sub">Sign in to reach your ledger on any device.</div>
+    <label for="loginEmail">Email address</label>
+    <input id="loginEmail" type="email" inputmode="email" placeholder="you@example.com" autocomplete="email">
+    <button class="btn" id="loginBtn">Send me a sign-in link</button>
+    <div class="login-msg" id="loginMsg"></div>
+  </div>
+</div>
 
 <header class="top">
   <div class="top-inner">
@@ -297,6 +332,7 @@ textarea{resize:vertical;min-height:44px}
       <button class="tool" id="btnExport"><svg class="ico" viewBox="0 0 24 24"><path d="M12 3v12M7 11l5 4 5-4"/><path d="M4 19h16"/></svg>Backup</button>
       <button class="tool" id="btnImport"><svg class="ico" viewBox="0 0 24 24"><path d="M12 15V3M7 7l5-4 5 4"/><path d="M4 19h16"/></svg>Restore</button>
       <button class="tool danger" id="btnReset"><svg class="ico" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5"/></svg>Reset</button>
+      <span class="acct-chip"><span class="sdot" id="syncDot"></span><span id="syncTxt">Synced</span><button id="signOutBtn">Sign out</button></span>
       <input type="file" id="fileIn" accept="application/json" hidden>
     </div>
   </div>
@@ -355,9 +391,38 @@ function seed(){
     txns:[]
   };
 }
-let S = load();
-function load(){ try{const r=localStorage.getItem(KEY);return r?JSON.parse(r):seed();}catch(e){return seed();} }
-function save(){ localStorage.setItem(KEY, JSON.stringify(S)); }
+let S = seed();
+
+/* ---------- Supabase config ---------- */
+const SUPABASE_URL = "https://oyjzchjuwzfkmurofhxu.supabase.co";
+const SUPABASE_KEY = "sb_publishable_18sEKnEULlhkQ7MPeTHU9A_gLPdHsiX";
+let SB=null, USER=null, pushTimer=null, ready=false;
+
+/* ---------- Local cache (offline safety) ---------- */
+function loadLocal(){ try{const r=localStorage.getItem(KEY);return r?JSON.parse(r):null;}catch(e){return null;} }
+function saveLocal(){ try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){} }
+
+/* ---------- save(): instant local + debounced cloud ---------- */
+function save(){
+  saveLocal();
+  if(!SB||!USER)return;
+  setSync("saving");
+  clearTimeout(pushTimer);
+  pushTimer=setTimeout(pushRemote,700);
+}
+async function pushRemote(){
+  if(!SB||!USER)return;
+  try{
+    const {error}=await SB.from("ledger_state").upsert({user_id:USER.id,data:S,updated_at:new Date().toISOString()});
+    setSync(error?"off":"ok");
+  }catch(e){ setSync("off"); }
+}
+function setSync(state){
+  const dot=document.getElementById("syncDot"), txt=document.getElementById("syncTxt");
+  if(!dot)return;
+  dot.className="sdot"+(state==="saving"?" saving":state==="off"?" off":"");
+  txt.textContent=state==="saving"?"Saving…":state==="off"?"Offline":"Synced";
+}
 
 /* ---------- Ledger engine ---------- */
 function compute(){
@@ -636,7 +701,50 @@ document.getElementById("btnImport").onclick=()=>document.getElementById("fileIn
 document.getElementById("fileIn").onchange=e=>{if(e.target.files[0])importData(e.target.files[0]);};
 document.getElementById("btnReset").onclick=()=>{if(confirm("Reset everything back to your opening snapshot? This clears all entries you’ve added.")){S=seed();save();render();}};
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeSheet();});
-render();
+
+/* ---------- Auth boot ---------- */
+function showLogin(){document.getElementById("loginScreen").classList.add("show");}
+function hideLogin(){document.getElementById("loginScreen").classList.remove("show");}
+async function loadState(){
+  let remote=null;
+  try{
+    const {data}=await SB.from("ledger_state").select("data").eq("user_id",USER.id).maybeSingle();
+    remote=(data&&data.data&&Object.keys(data.data).length)?data.data:null;
+  }catch(e){}
+  if(remote){S=remote;saveLocal();}
+  else{S=loadLocal()||seed();await pushRemote();}
+}
+async function onSignedIn(session){
+  USER=session.user;
+  hideLogin();
+  await loadState();
+  ready=true; setSync("ok"); render();
+}
+async function boot(){
+  SB=supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+  let started=false;
+  const go=session=>{started=true; if(session)onSignedIn(session); else showLogin();};
+  SB.auth.onAuthStateChange((_e,session)=>{
+    if(!started){go(session);return;}
+    if(session){if(!USER||USER.id!==session.user.id)onSignedIn(session);}
+    else{USER=null;ready=false;showLogin();}
+  });
+  setTimeout(async()=>{ if(!started){const {data:{session}}=await SB.auth.getSession();go(session);} },900);
+}
+document.getElementById("loginBtn").onclick=async ()=>{
+  const email=document.getElementById("loginEmail").value.trim();
+  const msg=document.getElementById("loginMsg"), btn=document.getElementById("loginBtn");
+  if(!email||!email.includes("@")){msg.className="login-msg err";msg.textContent="Please enter a valid email.";return;}
+  btn.disabled=true; msg.className="login-msg"; msg.textContent="Sending…";
+  const {error}=await SB.auth.signInWithOtp({email,options:{emailRedirectTo:location.origin+location.pathname}});
+  btn.disabled=false;
+  if(error){msg.className="login-msg err";msg.textContent=error.message;}
+  else{msg.className="login-msg ok";msg.textContent="Check your email for the sign-in link.";}
+};
+document.getElementById("loginEmail").addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("loginBtn").click();});
+document.getElementById("signOutBtn").onclick=async ()=>{try{await SB.auth.signOut();}catch(e){} location.reload();};
+
+boot();
 </script>
 </body>
 </html>
