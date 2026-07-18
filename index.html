@@ -392,8 +392,10 @@ textarea{resize:vertical;min-height:44px}
 
 <script>
 "use strict";
-const QR = n => "QR " + Math.round(Math.abs(n)).toLocaleString("en-US");
-const signQR = n => (n<0?"−":"") + "QR " + Math.round(Math.abs(n)).toLocaleString("en-US");
+const fmtNum = n => { const v=Math.abs(n); const hasFrac=Math.round(v*100)%100!==0;
+  return v.toLocaleString("en-US",{minimumFractionDigits:hasFrac?2:0,maximumFractionDigits:2}); };
+const QR = n => "QR " + fmtNum(n);
+const signQR = n => (n<0?"−":"") + "QR " + fmtNum(n);
 const uid = () => Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const today = () => new Date().toISOString().slice(0,10);
 const longDate = () => new Date().toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"});
