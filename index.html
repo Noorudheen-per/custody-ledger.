@@ -374,6 +374,7 @@ textarea{resize:vertical;min-height:44px}
       <button class="chip" data-f="people">People</button>
     </div>
     <div class="toolbar">
+      <button class="tool" id="btnEdit"><svg class="ico" viewBox="0 0 24 24"><path d="M4 20h4L18.5 9.5l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>Edit balances</button>
       <button class="tool" id="btnExport"><svg class="ico" viewBox="0 0 24 24"><path d="M12 3v12M7 11l5 4 5-4"/><path d="M4 19h16"/></svg>Backup</button>
       <button class="tool" id="btnImport"><svg class="ico" viewBox="0 0 24 24"><path d="M12 15V3M7 7l5-4 5 4"/><path d="M4 19h16"/></svg>Restore</button>
       <button class="tool danger" id="btnReset"><svg class="ico" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5"/></svg>Reset</button>
@@ -474,18 +475,12 @@ const ico = (k,cls="ico") => `<svg class="${cls}" viewBox="0 0 24 24">${P[k]||""
 
 /* ---------- Opening data ---------- */
 function seed(){
-  const p=(name,dir,bal,monthly=0)=>({id:uid(),name,dir,monthly,openBal:bal});
   return {
     custodian:"Nooru",
-    accounts:{debit:{name:"Debit Card",open:657.69}, wallet:{name:"Cash Wallet",open:2}},
-    creditCard:{owedOpen:211.34,limit:8300},
-    company:{owePettyOpen:10500, reimburseOpen:14435, toSubmitOpen:2877},
-    people:[
-      p("Minhaj","oweThem",1612),p("Nizar","oweThem",2200),p("Ali","oweThem",17),
-      p("Rashid","oweThem",4250),p("Mubashir","oweThem",2520),p("Ashik","oweThem",200),
-      p("Umar","oweMe",100),p("Nuss","oweMe",2959,450),p("Jaseem","oweMe",300),
-      p("Rona","oweMe",50),p("Lulu","oweMe",1200)
-    ],
+    accounts:{debit:{name:"Debit Card",open:0}, wallet:{name:"Cash Wallet",open:0}},
+    creditCard:{owedOpen:0,limit:8300},
+    company:{owePettyOpen:0, reimburseOpen:0, toSubmitOpen:0},
+    people:[],
     txns:[]
   };
 }
@@ -682,6 +677,48 @@ function firstAccount(){return Object.keys(S.accounts)[0];}
 function openSheet(){draft={type:"spend_personal",amount:"",account:firstAccount(),person:"",note:"",date:today()};buildSheet();document.getElementById("overlay").classList.add("show");}
 function closeSheet(){document.getElementById("overlay").classList.remove("show");}
 
+/* ---------- Edit balances (type your own amounts) ---------- */
+function openSetup(){
+  const c=S.company, cc=S.creditCard;
+  const mw=(id,val)=>`<div class="money-wrap"><span class="cur">QR</span><input class="money" id="${id}" inputmode="decimal" value="${val}"></div>`;
+  document.getElementById("sheet").innerHTML=`
+    <div class="sheet-head"><div><h2>Edit balances</h2><div class="sub">Type your current amounts. Leave 0 where empty. People are added in the People section.</div></div>
+      <button class="xbtn" id="xBtn">${ico("close")}</button></div>
+    <label class="fl">Fund custodian</label><input id="sCust" value="${esc(S.custodian)}">
+    <div class="row2">
+      <div><label class="fl">Debit card</label>${mw("sDebit",S.accounts.debit?.open||0)}</div>
+      <div><label class="fl">Cash wallet</label>${mw("sWallet",S.accounts.wallet?.open||0)}</div>
+    </div>
+    <div class="row2">
+      <div><label class="fl">Credit card owed</label>${mw("sCcOwed",cc.owedOpen)}</div>
+      <div><label class="fl">Credit limit</label>${mw("sCcLimit",cc.limit)}</div>
+    </div>
+    <label class="fl">Owe company (petty)</label>${mw("sOwe",c.owePettyOpen)}
+    <div class="row2">
+      <div><label class="fl">Reimbursement (submitted)</label>${mw("sReimb",c.reimburseOpen)}</div>
+      <div><label class="fl">Bills to submit</label>${mw("sToSubmit",c.toSubmitOpen||0)}</div>
+    </div>
+    <div class="sheet-actions"><button class="btn ghost" id="cancelBtn">Cancel</button><button class="btn primary" id="saveSetupBtn">Save balances</button></div>`;
+  document.getElementById("overlay").classList.add("show");
+  document.getElementById("xBtn").onclick=closeSheet;
+  document.getElementById("cancelBtn").onclick=closeSheet;
+  document.getElementById("saveSetupBtn").onclick=saveSetup;
+}
+function saveSetup(){
+  const num=id=>{const el=document.getElementById(id);return el?parseFloat(el.value)||0:0;};
+  S.custodian=(document.getElementById("sCust").value.trim())||"—";
+  if(!S.accounts.debit)S.accounts.debit={name:"Debit Card",open:0};
+  if(!S.accounts.wallet)S.accounts.wallet={name:"Cash Wallet",open:0};
+  S.accounts.debit.open=num("sDebit");
+  S.accounts.wallet.open=num("sWallet");
+  S.creditCard.owedOpen=num("sCcOwed");
+  S.creditCard.limit=num("sCcLimit")||S.creditCard.limit;
+  S.company.owePettyOpen=num("sOwe");
+  S.company.reimburseOpen=num("sReimb");
+  S.company.toSubmitOpen=num("sToSubmit");
+  save();closeSheet();render();
+}
+
 function buildSheet(){
   const needsAccount=!["cc_spend","submit_bills"].includes(draft.type);
   const needsPerson=TXN_META[draft.type].people;
@@ -801,6 +838,7 @@ function addPersonMain(dir){
   const name=prompt(dir==="oweThem"?"Name of person you borrowed from:":"Name of person who borrowed:");if(!name)return;
   const bal=prompt("Current outstanding amount (QR), or 0 if none:","0");
   S.people.push({id:uid(),name:name.trim(),dir,monthly:0,openBal:parseFloat(bal)||0});save();render();}
+document.getElementById("btnEdit").onclick=openSetup;
 document.getElementById("btnExport").onclick=exportData;
 document.getElementById("btnImport").onclick=()=>document.getElementById("fileIn").click();
 document.getElementById("fileIn").onchange=e=>{if(e.target.files[0])importData(e.target.files[0]);};
